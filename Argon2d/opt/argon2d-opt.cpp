@@ -399,7 +399,7 @@ void FillSlice(uint8_t* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 		reference_area_size = lanes*(SYNC_POINTS-1)*slice_length;
 	
 	//Filling blocks, preparing macro for referencing blocks in memory
-#define BLOCK_PTR(l,s,i) (state+((i)+(s)*slice_length+(l)*slice_length*lanes)*BYTES_IN_BLOCK)
+#define BLOCK_PTR(l,s,i) (state+((i)+(s)*slice_length+(l)*slice_length*SYNC_POINTS)*BYTES_IN_BLOCK)
 
 	uint32_t pseudo_rand, ref_index, ref_lane, ref_slice;
 	__m128i prev_block[64];  //previous block
@@ -447,6 +447,7 @@ void FillSlice(uint8_t* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 			else memcpy(prev_block, BLOCK_PTR(lane, slice - 1, slice_length - 1), BYTES_IN_BLOCK);
 		}
 		uint8_t* next_block = BLOCK_PTR(lane, slice, i);
+		//printf("Ref: %.2d Next:%.2d\n", (ref_block - state) / BYTES_IN_BLOCK, (next_block - state) / BYTES_IN_BLOCK);
 		MakeBlock(prev_block, ref_block, next_block);  //Create new block
 		
 	}
@@ -497,7 +498,7 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	if (lanes>m_cost / BLOCK_SIZE_KILOBYTE)
 		lanes = m_cost / BLOCK_SIZE_KILOBYTE;
 
-	printf("Argon2d called, %d m_cost %d lanes\n", m_cost, lanes);
+	//printf("Argon2d called, %d m_cost %d lanes\n", m_cost, lanes);
 
 	//Initial hashing
 	__m128i blockhash[64];
@@ -549,12 +550,12 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 		{
 			for (uint8_t l = 0; l < lanes; ++l)
 			{
-				//Threads.push_back(thread(FillSlice,state,  m_cost, lanes, r,l,s));
-				FillSlice(state, m_cost, lanes, r, l, s);
+				Threads.push_back(thread(FillSlice,state,  m_cost, lanes, r,l,s));
+				//FillSlice(state, m_cost, lanes, r, l, s);
 			}
-			/*for (auto& th : Threads)
+			for (auto& th : Threads)
 				th.join();
-			Threads.clear();*/
+			Threads.clear();
 		}
 	}
 	
