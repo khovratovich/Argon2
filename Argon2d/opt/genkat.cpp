@@ -40,7 +40,7 @@ void GenKat()
 		{
 			for (unsigned s_len = 8; s_len <= 24; s_len += 16)
 			{
-				for (unsigned thr = 1; thr <= 4; ++thr)
+				for (unsigned thr = 5; thr <= 8; ++thr)
 				{
 					for (unsigned outlen = 8; outlen <= 8; outlen *= 4)
 					{
@@ -92,7 +92,7 @@ void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, t
 	unsigned char one_array[256];
 	memset(one_array, 1, 256);
 
-	for (size_t m_cost = (size_t)1 << 10; m_cost <= (size_t)1 << 22; m_cost *= 2)
+	for (size_t m_cost = (size_t)1 << 1; m_cost <= (size_t)1 << 22; m_cost *= 2)
 	{
 		for (uint32_t thread_n = 1; thread_n <= 16; thread_n++)
 		{

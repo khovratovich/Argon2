@@ -419,7 +419,7 @@ void FillSlice(uint8_t* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 		else pseudo_rand = *(uint32_t*)BLOCK_PTR(lane, slice, i - 1);
 		/*1.2 Computing reference block location*/
 		pseudo_rand %= (reference_area_size + i);
-		if (pseudo_rand>reference_area_size)
+		if (pseudo_rand>=reference_area_size)
 		{
 			ref_index = pseudo_rand - reference_area_size;
 			ref_slice = slice;
@@ -427,10 +427,11 @@ void FillSlice(uint8_t* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 		}
 		else //Reference block is in other slices, in all lanes
 		{
-			ref_lane = pseudo_rand / (SYNC_POINTS*slice_length);
-			ref_index = pseudo_rand%slice_length;
 			/*Number of available slices per lane is different for r==0 and others*/
 			uint32_t available_slices = (round == 0) ? slice : (SYNC_POINTS - 1);
+
+			ref_lane = pseudo_rand / (available_slices*slice_length);
+			ref_index = pseudo_rand%slice_length;
 			ref_slice = (pseudo_rand / slice_length) % available_slices;
 			if (ref_slice >= slice) //This means we refer to next lanes in a previous pass
 				ref_slice++;
@@ -548,11 +549,12 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 		{
 			for (uint8_t l = 0; l < lanes; ++l)
 			{
-				Threads.push_back(thread(FillSlice,state,  m_cost, lanes, r,l,s));
+				//Threads.push_back(thread(FillSlice,state,  m_cost, lanes, r,l,s));
+				FillSlice(state, m_cost, lanes, r, l, s);
 			}
-			for (auto& th : Threads)
+			/*for (auto& th : Threads)
 				th.join();
-			Threads.clear();
+			Threads.clear();*/
 		}
 	}
 	
