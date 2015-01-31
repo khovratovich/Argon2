@@ -21,7 +21,7 @@ using namespace std;
 
 #include "blake2b-round-perm.h"
 #include "blake2.h"
-#include "argon2d.h"
+#include "argon2i.h"
 
 #else // ADDED
 
@@ -40,7 +40,7 @@ using namespace std;
 
 #include "blake2b-round-perm.h"
 #include "blake2.h"
-#include "argon2d.h"
+#include "argon2i.h"
 
 #endif // ADDED
 
@@ -62,6 +62,7 @@ void free_memory(uint8_t **memory)
 		_mm_free((void *)*memory);
 	}
 }
+
 
 void MakeBlock(__m128i* prev_block, uint8_t* ref_block, uint8_t* next_block)
 {
@@ -407,6 +408,18 @@ void MakeBlock(__m128i* prev_block, uint8_t* ref_block, uint8_t* next_block)
 	_mm_store_si128((__m128i *)	(next_block + 1008), prev_block[63]);
 }
 
+void GenerateAddresses(uint32_t round, uint8_t lane, uint8_t slice, uint32_t i, uint8_t* addresses)
+{
+	__m128i zero_block[64];
+	uint32_t input_block[256];
+	memset(zero_block, 0, 64 * sizeof(__m128i));
+	memset(input_block, 0, 256 * sizeof(uint32_t));
+	input_block[0] = round;
+	input_block[1] = lane;
+	input_block[2] = slice;
+	input_block[3] = i;
+	MakeBlock(zero_block, (uint8_t*)input_block, addresses);
+}
 
 
 void FillSlice(uint8_t* state, uint32_t m_cost, uint8_t lanes, uint32_t round, uint8_t lane, uint8_t slice)//Filling "slice" in "lane" and "round"
@@ -426,21 +439,20 @@ void FillSlice(uint8_t* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 #define BLOCK_PTR(l,s,i) (state+((i)+(s)*slice_length+(l)*slice_length*SYNC_POINTS)*BYTES_IN_BLOCK)
 
 	uint32_t pseudo_rand, ref_index, ref_lane, ref_slice;
+	uint32_t addresses[ADDRESSES_IN_BLOCK];
 	__m128i prev_block[64];  //previous block
 	for (uint32_t i = 0; i < slice_length; ++i)
 	{
+		/*0.Computing addresses if necessary*/
+		if (i % ADDRESSES_IN_BLOCK == 0)
+			GenerateAddresses(round, lane, slice, i, (uint8_t*)addresses);
+
 		if ((round == 0) && (slice == 0) && (i < 2)) //skip first two blocks
 			continue;
 		
 		/*1. Computing the reference block*/
-		/*1.1 Taking pseudo-random value from the previous block */
-		if (i == 0)
-		{
-			if (slice == 0)
-				pseudo_rand = *(uint32_t*)BLOCK_PTR(lane, SYNC_POINTS - 1, slice_length - 1);
-			else pseudo_rand = *(uint32_t*)BLOCK_PTR(lane, slice - 1, slice_length - 1);
-		}
-		else pseudo_rand = *(uint32_t*)BLOCK_PTR(lane, slice, i - 1);
+		/*1.1 Taking pseudo-random value from the list */
+		pseudo_rand = addresses[i&0xFF];
 		/*1.2 Computing reference block location*/
 		pseudo_rand %= (reference_area_size + i);
 		if (pseudo_rand>=reference_area_size)
@@ -479,7 +491,7 @@ void FillSlice(uint8_t* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 }
 
 
-int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
+int Argon2iOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
 {
 	if (outlen>MAX_OUTLEN)
@@ -523,6 +535,27 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 		lanes = m_cost / BLOCK_SIZE_KILOBYTE;
 
 	//printf("Argon2d called, %d m_cost %d lanes\n", m_cost, lanes);
+
+#ifdef KAT
+	FILE* fp = fopen("kat-argon2i.log", "a+");
+
+	fprintf(fp, "=======================================\n");
+	fprintf(fp, "Iterations: %d, Memory: %d KBytes, Parallelism: %d lanes, Tag length: %d bytes\n", t_cost, m_cost, lanes, outlen);
+
+
+#ifdef KAT
+	fprintf(fp, "Message: ");
+	for (unsigned i = 0; i<msglen; ++i)
+		fprintf(fp, "%2.2x ", ((unsigned char*)msg)[i]);
+	fprintf(fp, "\n");
+	fprintf(fp, "Nonce: ");
+	for (unsigned i = 0; i<noncelen; ++i)
+		fprintf(fp, "%2.2x ", ((unsigned char*)nonce)[i]);
+	fprintf(fp, "\n");
+
+#endif
+
+#endif
 
 	//Initial hashing
 	__m128i blockhash[64];
@@ -613,11 +646,19 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 
 	free_memory(&state);
 
+#ifdef KAT
+	fprintf(fp, "Tag: ");
+	for (unsigned i = 0; i<outlen; ++i)
+		fprintf(fp, "%2.2x ", ((uint8_t*)out)[i]);
+	fprintf(fp, "\n");
+	fclose(fp);
+#endif 
+
 	return 0;
 }
 
 int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
 	uint32_t t_cost, uint32_t m_cost)
 {
-	return Argon2dOpt((uint8_t*)out, outlen, (const uint8_t*)in, inlen, (const uint8_t*)salt, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, 1);
+	return Argon2iOpt((uint8_t*)out, outlen, (const uint8_t*)in, inlen, (const uint8_t*)salt, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, 1);
 }
