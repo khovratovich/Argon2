@@ -374,7 +374,7 @@ void FillSegment(uint8_t *memory, uint32_t pass, uint32_t slice, uint8_t lane, u
 
 void FillMemory(uint8_t *memory, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
 {
-//	vector<thread> Threads;
+	vector<thread> Threads;
 	
 	for (uint32_t p = 0; p < t_cost; p++)
 	{
@@ -389,19 +389,19 @@ void FillMemory(uint8_t *memory, uint32_t t_cost, uint32_t m_cost, uint8_t lanes
 				printf("%" PRIu32 " :I will pass: %" PRIu64 " %" PRIu64 " %" PRIu64 "\n", t, p, s, l);
 #endif
 
-				//Threads.push_back(thread(FillSegment,memory, p, s, t,lanes,m_cost));
-				FillSegment(memory, p, s, t, lanes, m_cost);
+				Threads.push_back(thread(FillSegment,memory, p, s, t,lanes,m_cost));
+				//FillSegment(memory, p, s, t, lanes, m_cost);
 		
 #ifdef PRINT_THREAD
 				sleep(5);
 #endif
 			}
 
-			/*for (auto& th : Threads)
+			for (auto& th : Threads)
 			{
 				th.join();
 			}
-			Threads.clear();*/
+			Threads.clear();
 		}
 
 	}
