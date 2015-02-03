@@ -11,7 +11,7 @@ using namespace std;
 
 #include "argon2d.h"
 #include "blake2.h"
-#define _MEASURE
+
 
 void GenKat()
 {
@@ -23,7 +23,7 @@ void GenKat()
 	unsigned t_cost = 3;
 	//unsigned m_cost = 2;
 #ifdef KAT
-	remove("kat-argon2d.log");
+	remove(KAT_FILENAME);
 #endif
 	for (unsigned m_cost = 1; m_cost <= 1000; m_cost *= 10)
 	{
@@ -32,7 +32,7 @@ void GenKat()
 		{
 			for (unsigned s_len = 8; s_len <= 24; s_len += 16)
 			{
-				for (unsigned thr = 1; thr <= 8; ++thr)
+				for (unsigned thr = 3; thr <= 8; ++thr)
 				{
 					for (unsigned outlen = 8; outlen <= 8; outlen *= 4)
 					{
@@ -103,7 +103,7 @@ void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, t
 			clock_t finish = clock();
 			d2 = (i3 - i2) / (m_cost);
 			float mcycles = (float)(i3 - i2) / (1 << 20);
-			printf("Argon %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles ", m_cost >> 10, thread_n, (float)d2 / 1000, mcycles);
+			printf("Argon2d %d pass(es)  %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles ", t_cost, m_cost >> 10, thread_n, (float)d2 / 1000, mcycles);
 			float run_time = ((float)finish - start) / (CLOCKS_PER_SEC);
 			printf("%2.4f seconds\n\n", run_time);
 #endif
