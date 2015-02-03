@@ -1,11 +1,14 @@
 
+//#define KAT
+//#define KAT_INTERNAL
+
 #define MIN_LANES  1
 #define SYNC_POINTS 4
 #define MAX_OUTLEN 0xFFFFFFFF
 #define MIN_OUTLEN 4
 #define MIN_MEMORY 1
 #define MAX_MEMORY 0xFFFFFFFF
-#define MIN_TIME 2
+#define MIN_TIME 1
 #define MIN_MSG 0
 #define MAX_MSG 0xFFFFFFFF
 #define MIN_AD  0
@@ -19,6 +22,8 @@
 #define BLOCK_SIZE BYTES_IN_BLOCK
 #define VERSION_NUMBER 0x10
 #define BLAKE_INPUT_HASH_SIZE 32
+#define BLAKE_OUTPUT_HASH_SIZE 64
+#define KAT_FILENAME "kat-argon2d-opt.log"
 
 #define ALIGN_ARGON 16
 

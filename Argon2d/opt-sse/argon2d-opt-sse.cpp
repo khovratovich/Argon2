@@ -1,3 +1,10 @@
+/*****Argon2d optimized implementation (SSE3)*
+*  Code written by Daniel Dinu and Dmitry Khovratovich
+* khovratovich@gmail.com
+**/
+
+
+
 #include <stdio.h>
 #include <stdint.h>
 #include <inttypes.h>
@@ -15,6 +22,9 @@ using namespace std;
 #if defined(_MSC_VER) // ADDED
 #else
 #include <x86intrin.h>
+
+#include <string.h>
+
 #endif
 // BLAKE2 round
 #include "blake2-round.h"
@@ -29,42 +39,9 @@ using namespace std;
 #define BLOCK_SIZE 1024
 #endif
 
-// The memory size in bytes
-// 1 GB = 1073741824 B
-// 2 GB = 2147483648 B
-/*#ifndef MEMORY_SIZE
-#define MEMORY_SIZE 1073741824
-#endif
-
-#define BLOCKS (MEMORY_SIZE / BLOCK_SIZE)
-
-#ifndef THREADS
-#define THREADS 2
-#endif
-
-#ifndef SYNCS
-#define SYNCS 4
-#endif
-
-#ifndef PASSES
-#define PASSES 1
-#endif
 
 
-#define THREAD_MEMORY_SIZE (MEMORY_SIZE / THREADS)
-
-#define THREAD_BLOCKS (THREAD_MEMORY_SIZE / BLOCK_SIZE)
-
-
-#define SLICE_MEMORY_SIZE (MEMORY_SIZE / SYNCS)
-
-#define SLICE_BLOCKS (SLICE_MEMORY_SIZE / BLOCK_SIZE)
-
-
-#define THREAD_SLICE_MEMORY_SIZE (THREAD_MEMORY_SIZE / SYNCS)
-
-#define THREAD_SLICE_BLOCKS (THREAD_BLOCKS / SYNCS)*/
-
+#define MEASURE
 
 struct info {
 	uint64_t pass;
@@ -76,8 +53,8 @@ struct info {
 
 
 __m128i t0, t1;
- __m128i r16;
- __m128i r24;
+const __m128i r16 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9);
+const __m128i r24 = _mm_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10);
 
 //#define BLOCK_OFFSET(l,s) {}
 
@@ -186,22 +163,24 @@ void ComputeBlock(__m128i *state, uint8_t* ref_block_ptr, uint8_t* next_block_pt
 void Initialize(uint8_t *state,uint8_t* input_hash,uint8_t lanes, uint32_t m_cost)
 {
 	__m128i blockhash[BLOCK_SIZE / 16];
-	memset(blockhash, 0, BLOCK_SIZE);
-	memcpy(blockhash, input_hash, BLAKE_INPUT_HASH_SIZE);
-
 	uint8_t blockcounter[BLOCK_SIZE];
+	memset(blockcounter, 0, BLOCK_SIZE);
 	for (uint8_t l = 0; l < lanes; ++l)
 	{
 		blockcounter[4] = l;
 		blockcounter[0] = 0;
+		memset(blockhash, 0, BLOCK_SIZE);
+		memcpy(blockhash, input_hash, BLAKE_INPUT_HASH_SIZE);
 		ComputeBlock(blockhash, blockcounter, state+l * (m_cost / (SYNC_POINTS*lanes))*BYTES_IN_BLOCK);
 		blockcounter[0] = 1;
+		memset(blockhash, 0, BLOCK_SIZE);
+		memcpy(blockhash, input_hash, BLAKE_INPUT_HASH_SIZE);
 		ComputeBlock(blockhash, blockcounter, state + (l * (m_cost / (SYNC_POINTS*lanes)) + 1)*BYTES_IN_BLOCK);
 	}
 	memset(blockhash, 0, 64 * sizeof(__m128i));
 }
 
-void Finalize(uint8_t *state, uint8_t* out, uint32_t outlen, uint8_t lanes, uint32_t m_cost)
+void Finalize(uint8_t *state, uint8_t* out, uint32_t outlen, uint8_t lanes, uint32_t m_cost)//XORing the last block of each lane, hashing it, making the tag.
 {
 	uint8_t tag_buffer[64];
 	blake2b_state BlakeHash;
@@ -211,9 +190,8 @@ void Finalize(uint8_t *state, uint8_t* out, uint32_t outlen, uint8_t lanes, uint
 
 	for (uint8_t l = 0; l < lanes; ++l)//XORing all last blocks of the lanes
 	{
-		uint32_t segment_size = (m_cost / (SYNC_POINTS*lanes))*BLOCK_SIZE;
-		uint32_t slice_size = (m_cost / SYNC_POINTS)*BLOCK_SIZE;
-		uint8_t* block_ptr = state + (SYNC_POINTS - 1)*slice_size + segment_size - BLOCK_SIZE; //points to the last block of the first lane
+		uint32_t segment_length = m_cost / (SYNC_POINTS*lanes);
+		uint8_t* block_ptr = state + (((SYNC_POINTS - 1)*lanes+l+1)*segment_length-1)*BLOCK_SIZE; //points to the last block of the first lane
 
 		for (uint32_t j = 0; j < BLOCK_SIZE / 16; ++j)
 		{
@@ -223,24 +201,33 @@ void Finalize(uint8_t *state, uint8_t* out, uint32_t outlen, uint8_t lanes, uint
 
 	}
 
-	blake2b_init(&BlakeHash, 64);
+	blake2b_init(&BlakeHash, BLAKE_OUTPUT_HASH_SIZE);
 	blake2b_update(&BlakeHash, (uint8_t*)&blockhash, BLOCK_SIZE);
 
 	uint8_t* out_flex = out;
 	uint32_t outlen_flex = outlen;
-	while (outlen_flex > 32)//Outputting 32 bytes at a time
+	while (outlen_flex > BLAKE_OUTPUT_HASH_SIZE/2)//Outputting BLAKE_OUTPUT_HASH_SIZE/2 bytes at a time
 	{
-		blake2b_final(&BlakeHash, tag_buffer, 64);
-		memcpy(out_flex, tag_buffer, 32);
-		out_flex += 32;
-		outlen_flex -= 32;
-		blake2b_init(&BlakeHash, 64);
-		blake2b_update(&BlakeHash, tag_buffer, 64);
+		blake2b_final(&BlakeHash, tag_buffer, BLAKE_OUTPUT_HASH_SIZE);
+		memcpy(out_flex, tag_buffer, BLAKE_OUTPUT_HASH_SIZE/2);
+		out_flex += BLAKE_OUTPUT_HASH_SIZE/2;
+		outlen_flex -= BLAKE_OUTPUT_HASH_SIZE/2;
+		blake2b_init(&BlakeHash, BLAKE_OUTPUT_HASH_SIZE);
+		blake2b_update(&BlakeHash, tag_buffer, BLAKE_OUTPUT_HASH_SIZE);
 	}
 	blake2b_final(&BlakeHash, tag_buffer, outlen_flex);
 	memcpy(out_flex, tag_buffer, outlen_flex);
-	memset(tag_buffer, 0, 64);
+	memset(tag_buffer, 0, BLAKE_OUTPUT_HASH_SIZE);
 	memset(blockhash, 0, BLOCK_SIZE);
+
+#ifdef KAT
+	FILE* fp = fopen(KAT_FILENAME, "a+");
+	fprintf(fp, "Tag: ");
+	for (unsigned i = 0; i<outlen; ++i)
+		fprintf(fp, "%2.2x ", ((uint8_t*)out)[i]);
+	fprintf(fp, "\n");
+	fclose(fp);
+#endif 
 }
 
 void print_block(uint8_t *block)
@@ -257,101 +244,124 @@ void print_block(uint8_t *block)
 
 void FillSegment(uint8_t *memory, uint32_t pass, uint32_t slice, uint8_t lane, uint8_t lanes, uint32_t m_cost)
 {
-	__m128i block1[64];
+	__m128i prev_block[64];
 
-	uint32_t block1_index;
+	uint32_t next_block_offset;
 
 	uint32_t phi;
 
 	uint32_t segment_length = m_cost / (lanes*SYNC_POINTS);
-	uint32_t stop = segment_length;
+	//uint32_t stop = segment_length;//Number of blocks to produce in the segment, is different for the first slice, first pass
+	uint32_t start=0;
+
+	uint32_t prev_block_offset; //offset of previous block
+	uint32_t prev_block_recalc=0; //number of the first block in the reference area in the previous slice 
 
 	if(0 == pass && 0 == slice) // First pass; first slice
 	{
-		stop -= 2;
+		start += 3;
+		if (segment_length <= 2)
+			return;
 
-
-		uint32_t bi = (lane * segment_length + 1) * BLOCK_SIZE;
+		uint32_t bi = prev_block_offset = (lane * segment_length + 1) * BLOCK_SIZE;;//<bi> -- temporary variable for loading previous block
 		for (uint8_t i = 0; i < 64; i++)
 		{
-			block1[i] = _mm_load_si128((__m128i *) &memory[bi]);
+			prev_block[i] = _mm_load_si128((__m128i *) &memory[bi]);
 			bi += 16;
 		}
 		
-		block1_index = (lane * segment_length + 2) * BLOCK_SIZE;
+		next_block_offset = (lane * segment_length + 2) * BLOCK_SIZE;
 
-		uint32_t block2_index = (lane * segment_length) * BLOCK_SIZE;
+		uint32_t reference_block_offset = (lane * segment_length) * BLOCK_SIZE;
 
 		// compute block
-		ComputeBlock(block1, memory+ block2_index, memory+block1_index);
+		ComputeBlock(prev_block, memory+ reference_block_offset, memory+next_block_offset);//Computing third block in the segment
 
-		phi = _mm_extract_epi32(block1[0], 0);
+		phi = _mm_extract_epi32(prev_block[0], 0);
 	}
 	else
 	{
-		block1_index = ((slice * lanes + lane) * segment_length) * BLOCK_SIZE;
-		if(slice)
-		{
-			block1_index = block1_index + (segment_length - lanes*segment_length) * BLOCK_SIZE;
-		}
-	
-
-		uint32_t bi = block1_index;
+		uint32_t prev_slice = (slice>0)?(slice-1):(SYNC_POINTS-1);
+		prev_block_recalc = (slice > 0) ? ((slice - 1)*lanes*segment_length) : (SYNC_POINTS - 1)*lanes*segment_length;
+		uint32_t bi = prev_block_offset = ((prev_slice * lanes + lane + 1) * segment_length - 1) * BLOCK_SIZE;//<bi> -- temporary variable for loading previous block
 		for (uint8_t i = 0; i < 64; i++)
 		{
-			block1[i] = _mm_load_si128((__m128i *) &memory[bi]);
+			prev_block[i] = _mm_load_si128((__m128i *) &memory[bi]);
 			bi += 16;
 		}
 		
-		phi = _mm_extract_epi32(block1[0], 0);
+		phi = _mm_extract_epi32(prev_block[0], 0);
 	}
 
-	for(uint32_t i = 1; i < stop; i++)
+	next_block_offset = ((slice*lanes + lane)*segment_length + start)*BLOCK_SIZE;
+	for(uint32_t i = start; i < segment_length; i++)
 	{
 		// Compute block2 index
-		uint32_t barrier1 = slice * segment_length*lanes;
+		uint32_t barrier1 = slice * segment_length*lanes; //Number of blocks generated in previous slices
 		
-		uint32_t barrier2 = barrier1;
-		if(pass)
+		uint32_t barrier2;  //Number of blocks that we can reference in total (including the previous block in the lane that we can not reference in the first block of the segment)
+		if(pass==0)
+			barrier2 = barrier1;  
+		else
 		{
 			barrier2 = barrier1 + (SYNC_POINTS - slice - 1) *  segment_length*lanes;
 		}
 
-		uint32_t barrier3 = barrier2 + i;
+		uint32_t barrier3 = (i==0)? (barrier2 -lanes):(barrier2+ i-1);
 
 		uint32_t r = barrier3;
-		uint32_t block2_index = (phi % r);
-
-		if(block2_index < barrier1)
+		uint32_t reference_block_offset = (phi % r);
+		
+		/*Excluding the previous block from referencing*/
+		if(i==0)
 		{
-			block2_index *= BLOCK_SIZE;
+			if (reference_block_offset >= prev_block_recalc)
+			{
+				uint32_t shift = (reference_block_offset - prev_block_recalc) / (segment_length - 1);
+				reference_block_offset += (shift > lanes) ? lanes : shift;
+			}
+			/*if(slice==0)
+			{
+				if (reference_block_offset + lanes*segment_length >= prev_block_offset / BLOCK_SIZE)
+					reference_block_offset++;
+			}
+			else
+			if (reference_block_offset >= prev_block_offset / BLOCK_SIZE)
+					reference_block_offset++;*/
+		}
+
+		//Mapping the reference block address into the memory
+		if(reference_block_offset < barrier1)
+		{
+			reference_block_offset *= BLOCK_SIZE;
 		}
 		else
 		{
-			if(block2_index >= barrier1 && block2_index < barrier2)
+			if(reference_block_offset >= barrier1 && reference_block_offset < barrier2)
 			{
-				block2_index = (block2_index + segment_length*lanes) * BLOCK_SIZE;
+				reference_block_offset = (reference_block_offset + segment_length*lanes) * BLOCK_SIZE;
 			}
 			else
 			{
-				block2_index = (block2_index - (barrier2 - barrier1) + lane *  segment_length) * BLOCK_SIZE;
+				reference_block_offset = (reference_block_offset - (barrier2 - barrier1) + lane *  segment_length) * BLOCK_SIZE;
 			}
 		}
 	
 
-		// Compute block1 index
-		block1_index += BLOCK_SIZE;
-		if(i == 1 && slice != 0)
+		// Compute prev_block index
+		/*if(i == 0 && slice != 0)
 		{
-			block1_index = block1_index + (segment_length*lanes - segment_length) * BLOCK_SIZE;
-		}
+			next_block_offset = next_block_offset + (segment_length*lanes - segment_length) * BLOCK_SIZE;
+		}*/
 
 		// compute block
-		ComputeBlock(block1, memory + block2_index, memory+block1_index);
+		ComputeBlock(prev_block, memory + reference_block_offset, memory+next_block_offset);
 
-		phi = _mm_extract_epi32(block1[0], 0);
+		phi = _mm_extract_epi32(prev_block[0], 0);
+		next_block_offset += BLOCK_SIZE;
 
-		//if(lane==0 && slice==0) printf("Test: %d\n", *(uint32_t *)block1); // TODO: test
+
+		//if(lane==0 && slice==0) printf("Test: %d\n", *(uint32_t *)prev_block); // TODO: test
 	}
 }
 
@@ -372,15 +382,12 @@ void FillSegment(uint8_t *memory, uint32_t pass, uint32_t slice, uint8_t lane, u
 }*/
 
 
-void FillMemory(uint8_t *memory, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
+void FillMemory(uint8_t *memory, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)//Main loop: filling memory <t_cost> times
 {
 	vector<thread> Threads;
 	
 	for (uint32_t p = 0; p < t_cost; p++)
 	{
-#ifdef PRINT_THREAD	
-	printf("\n\nPass: %d\n", p);
-#endif
 		for (uint32_t s = 0; s < SYNC_POINTS; s++)
 		{
 			for (uint32_t t = 0; t < lanes; t++)
@@ -403,7 +410,16 @@ void FillMemory(uint8_t *memory, uint32_t t_cost, uint32_t m_cost, uint8_t lanes
 			}
 			Threads.clear();
 		}
+#ifdef KAT_INTERNAL
+		FILE* fp = fopen(KAT_FILENAME, "a+");
+		fprintf(fp, "\n After pass %d:\n", p);
+		for (uint32_t i = 0; i < m_cost; ++i)
+		{
+			fprintf(fp, "Block %.4d [0]: %x\n", i, *(uint32_t*)(memory+i*BLOCK_SIZE));
 
+		}
+		fclose(fp);
+#endif
 	}
 }
 
@@ -458,7 +474,7 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	//struct timeval tv1, tv2;
 
 	
-	printf("---Begin---\n");
+	//printf("---Begin---\n");
 	uint8_t *memory;
 	
 #ifdef MEASURE
@@ -489,7 +505,29 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 
 
 	blake2b_final(&BlakeHash, blockhash, BLAKE_INPUT_HASH_SIZE); //Calculating H0
-		
+#ifdef KAT
+	FILE* fp = fopen(KAT_FILENAME, "a+");
+
+	fprintf(fp, "=======================================\n");
+	fprintf(fp, "Iterations: %d, Memory: %d KBytes, Parallelism: %d lanes, Tag length: %d bytes\n", t_cost, m_cost, lanes, outlen);
+
+
+
+	fprintf(fp, "Message: ");
+	for (unsigned i = 0; i<msglen; ++i)
+		fprintf(fp, "%2.2x ", ((unsigned char*)msg)[i]);
+	fprintf(fp, "\n");
+	fprintf(fp, "Nonce: ");
+	for (unsigned i = 0; i<noncelen; ++i)
+		fprintf(fp, "%2.2x ", ((unsigned char*)nonce)[i]);
+	fprintf(fp, "\n");
+	fprintf(fp, "Input Hash: ");
+	for (unsigned i = 0; i<BLAKE_INPUT_HASH_SIZE; ++i)
+		fprintf(fp, "%2.2x ", ((unsigned char*)blockhash)[i]);
+	fprintf(fp, "\n");
+	fclose(fp);
+#endif
+
 	allocate_memory(&memory,m_cost);
 	
 	Initialize(memory,blockhash,lanes,m_cost); //Computing first two blocks in each segment
@@ -508,7 +546,7 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 
 	//print_block(&memory[(BLOCKS - 1) * BLOCK_SIZE]);
 	
-#ifdef MEASURE	
+/*#ifdef MEASURE	
 	uint64_t cycles = end - begin;
 	//double time = (tv2.tv_sec - tv1.tv_sec) + (tv2.tv_usec - tv1.tv_usec) / USEC_TO_SEC;
 	
@@ -526,7 +564,7 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	printf("=== Results - end === \n");
 
 	printf("---End---\n");
-#endif
+#endif*/
 
 	return 0;
 }
