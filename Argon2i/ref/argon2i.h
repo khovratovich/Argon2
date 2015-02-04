@@ -1,13 +1,14 @@
-#include <stdlib.h> // ADDED for size_t
-#include <stdint.h> // ADDED for unit32_t
+
+//#define KAT
+//#define KAT_INTERNAL
 
 #define MIN_LANES  1
-#define SYNC_POINTS 2
+#define SYNC_POINTS 4
 #define MAX_OUTLEN 0xFFFFFFFF
 #define MIN_OUTLEN 4
 #define MIN_MEMORY 1
 #define MAX_MEMORY 0xFFFFFFFF
-#define MIN_TIME 2
+#define MIN_TIME 3
 #define MIN_MSG 0
 #define MAX_MSG 0xFFFFFFFF
 #define MIN_AD  0
@@ -18,22 +19,46 @@
 #define MAX_SECRET 32
 #define BLOCK_SIZE_KILOBYTE 1
 #define BYTES_IN_BLOCK (1024*BLOCK_SIZE_KILOBYTE)
-#define VERSION_NUMBER 0x10
-#define ADDRESSES_IN_BLOCK (BYTES_IN_BLOCK/4)
+#define BLOCK_SIZE BYTES_IN_BLOCK
+#define VERSION_NUMBER 0x11
+#define BLAKE_INPUT_HASH_SIZE 32
+#define BLAKE_OUTPUT_HASH_SIZE 64
+#define ADDRESSES_PER_BLOCK (BLOCK_SIZE/4)
+#define ADDRESSES_MASK (BLOCK_SIZE/4-1)
+#define KAT_FILENAME "kat-argon2i-ref.log"
 
 #define ALIGN_ARGON 16
 
-#define FEEDBACK
-//#define KAT
-
+#define USEC_TO_SEC 			(1000 * 1000 * 1.0)
+#define BYTES_TO_GIGABYTES 		(1024 * 1024 * 1024 * 1.0)
 struct block{
 	uint8_t v[BYTES_IN_BLOCK];
 
 	block(){ memset(v, 0, BYTES_IN_BLOCK); }
 	uint64_t& operator[](uint8_t i){ return *(uint64_t*)(v + 8 * i); }
 	block& operator=(const block& r){ memcpy(v, r.v, BYTES_IN_BLOCK); return *this; }
-	block& operator^(const block& r){ block a; for (unsigned j = 0; j < BYTES_IN_BLOCK; ++j) a.v[j] = v[j] ^ r.v[j]; return *this; }
+	block operator^(const block& r){ block a; for (unsigned j = 0; j < BYTES_IN_BLOCK; ++j) a.v[j] = v[j] ^ r.v[j]; return a; }
 };
+
+struct scheme_info_t
+{
+	block *state;
+	uint32_t mem_size;
+	uint32_t passes;
+	uint32_t lanes;
+	scheme_info_t(block* s, uint32_t m, uint8_t p, uint32_t l){ state = s; mem_size = m; passes = p; lanes = l; }
+};
+
+struct position_info_t {
+
+	uint32_t pass;
+	uint8_t slice;
+	uint8_t lane;
+	uint32_t index;
+	position_info_t(uint32_t p = 0, uint8_t s = 0, uint8_t l = 0, uint32_t i = 0){ pass = p; slice = s; lane = l; index = i; }
+};
+
+
 
 extern int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
 	uint32_t t_cost, uint32_t m_cost);
