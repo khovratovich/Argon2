@@ -36,9 +36,9 @@ void GenKat()
 	for (unsigned m_cost = 1; m_cost <= 1000; m_cost *= 10)
 	{
 
-		for (unsigned p_len = 0; p_len < 256; p_len += 128)
+		for (unsigned p_len =16; p_len <=16; p_len += 128)
 		{
-			for (unsigned s_len = 8; s_len <= 24; s_len += 16)
+			for (unsigned s_len = 8; s_len <= 8; s_len += 16)
 			{
 				for (unsigned thr = 1; thr <= 8; ++thr)
 				{
@@ -111,7 +111,7 @@ void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, t
 			clock_t finish = clock();
 			d2 = (i3 - i2) / (m_cost);
 			float mcycles = (float)(i3 - i2) / (1 << 20);
-			printf("Argon2d Opt %d pass(es)  %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles\n ", t_cost, m_cost >> 10, thread_n, (float)d2 / 1000, mcycles);
+			printf("Argon2i Opt %d pass(es)  %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles\n ", t_cost, m_cost >> 10, thread_n, (float)d2 / 1000, mcycles);
 			float run_time = ((float)finish - start) / (CLOCKS_PER_SEC);
 			//printf("%2.4f seconds\n\n", run_time);
 #endif

@@ -28,11 +28,11 @@ void GenKat()
 	for (unsigned m_cost = 1; m_cost <= 1000; m_cost *= 10)
 	{
 
-		for (unsigned p_len = 0; p_len < 256; p_len += 128)
+		for (unsigned p_len = 16; p_len <=16; p_len += 128)
 		{
-			for (unsigned s_len = 8; s_len <= 24; s_len += 16)
+			for (unsigned s_len = 8; s_len <= 8; s_len += 16)
 			{
-				for (unsigned thr = 3; thr <= 8; ++thr)
+				for (unsigned thr = 1; thr <= 8; ++thr)
 				{
 					for (unsigned outlen = 8; outlen <= 8; outlen *= 4)
 					{

@@ -100,7 +100,7 @@ void GenerateAddresses(const scheme_info_t* info, position_info_t* position, uin
 	uint32_t ref_index, ref_lane, ref_slice;
 	for (uint32_t i = 0; i < ADDRESSES_PER_BLOCK; ++i)
 	{
-		if (position->slice == 0 && position->pass == 0 && i <2)
+		if (position->slice == 0 && position->pass == 0 && position->index==0&& i <2)
 			continue;
 		uint32_t pseudo_rand = ((uint32_t*)address_block.v)[i];
 		uint32_t total_area = reference_area_size + i - 1;
@@ -192,7 +192,7 @@ block*  Initialize(uint32_t outlen, const uint8_t *msg, uint32_t msglen, const u
 {
 
 	//Initial hashing
-	block blockhash;//H_0 in the document
+	uint8_t blockhash[BLAKE_INPUT_HASH_SIZE+8];//H_0 in the document
 	uint8_t version = VERSION_NUMBER;
 	blake2b_state BlakeHash;
 	blake2b_init(&BlakeHash, BLAKE_INPUT_HASH_SIZE);
@@ -212,7 +212,8 @@ block*  Initialize(uint32_t outlen, const uint8_t *msg, uint32_t msglen, const u
 	blake2b_update(&BlakeHash, (const uint8_t*)ad, adlen);
 
 
-	blake2b_final(&BlakeHash, blockhash.v, BLAKE_INPUT_HASH_SIZE);
+	blake2b_final(&BlakeHash, blockhash, BLAKE_INPUT_HASH_SIZE);
+	memset(blockhash + BLAKE_INPUT_HASH_SIZE, 0, 8);
 
 #ifdef KAT
 	FILE* fp = fopen(KAT_FILENAME, "a+");
@@ -232,7 +233,7 @@ block*  Initialize(uint32_t outlen, const uint8_t *msg, uint32_t msglen, const u
 	fprintf(fp, "\n");
 	fprintf(fp, "Input Hash: ");
 	for (unsigned i = 0; i<BLAKE_INPUT_HASH_SIZE; ++i)
-		fprintf(fp, "%2.2x ", ((unsigned char*)blockhash.v)[i]);
+		fprintf(fp, "%2.2x ", ((unsigned char*)blockhash)[i]);
 	fprintf(fp, "\n");
 	fclose(fp);
 #endif
@@ -242,17 +243,17 @@ block*  Initialize(uint32_t outlen, const uint8_t *msg, uint32_t msglen, const u
 	allocate_memory(&state, m_cost);
 
 	//Creating first blocks, we always have at least two blocks in a slice
-	block blockcounter;
+	
 	uint32_t segment_length = m_cost / (lanes* (uint32_t)SYNC_POINTS);
 	for (uint8_t l = 0; l < lanes; ++l)
 	{
-		blockcounter.v[4] = l;
-		blockcounter.v[0] = 0;
-		MakeBlock(&blockhash, &blockcounter, &(state[l*segment_length]));
-		blockcounter.v[0] = 1;
-		MakeBlock(&blockhash, &blockcounter, &(state[l*segment_length+1]));
+		blockhash[BLAKE_INPUT_HASH_SIZE + 4] = l;
+		blockhash[BLAKE_INPUT_HASH_SIZE] = 0;
+		blake2b_long((uint8_t*)&(state[l*segment_length]),blockhash, BLOCK_SIZE, BLAKE_INPUT_HASH_SIZE + 8);
+		blockhash[BLAKE_INPUT_HASH_SIZE] = 1;
+		blake2b_long((uint8_t*)&(state[l*segment_length + 1]), blockhash, BLOCK_SIZE, BLAKE_INPUT_HASH_SIZE + 8);
 	}
-	memset(blockhash.v, 0, 64 * sizeof(__m128i));
+	memset(blockhash, 0, BLAKE_INPUT_HASH_SIZE + 8);
 	return state;
 }
 
@@ -265,26 +266,7 @@ void Finalize(scheme_info_t* info, uint8_t *out, uint32_t outlen)//XORing the la
 	{
 		blockhash = blockhash^ info->state[BLOCK(l, SYNC_POINTS - 1, segment_length - 1)];
 	}
-
-	uint8_t tag_buffer[BLAKE_OUTPUT_HASH_SIZE];
-	blake2b_state BlakeHash;
-	blake2b_init(&BlakeHash, BLAKE_OUTPUT_HASH_SIZE);
-	blake2b_update(&BlakeHash, (const uint8_t*)&blockhash, BYTES_IN_BLOCK);
-
-	uint8_t* out_flex = out;
-	uint32_t outlen_flex = outlen;
-	while (outlen_flex > BLAKE_OUTPUT_HASH_SIZE/2)//Outputting BLAKE_OUTPUT_HASH_SIZE/2 bytes at a time
-	{
-		blake2b_final(&BlakeHash, tag_buffer, BLAKE_OUTPUT_HASH_SIZE);
-		memcpy(out_flex, tag_buffer, BLAKE_OUTPUT_HASH_SIZE/2);
-		out_flex += BLAKE_OUTPUT_HASH_SIZE/2;
-		outlen_flex -= BLAKE_OUTPUT_HASH_SIZE/2;
-		blake2b_init(&BlakeHash, BLAKE_OUTPUT_HASH_SIZE);
-		blake2b_update(&BlakeHash, tag_buffer, BLAKE_OUTPUT_HASH_SIZE);
-	}
-	blake2b_final(&BlakeHash, tag_buffer, outlen_flex);
-	memcpy(out_flex, tag_buffer, outlen_flex);
-	memset(tag_buffer, 0, BLAKE_OUTPUT_HASH_SIZE);
+	blake2b_long(out, blockhash.v, outlen, BLOCK_SIZE);
 
 	free_memory(info->state);
 
@@ -296,7 +278,7 @@ void Finalize(scheme_info_t* info, uint8_t *out, uint32_t outlen)//XORing the la
 	fprintf(fp, "\n");
 	fclose(fp);
 #endif 
-	memset(blockhash.v, 0, 64 * sizeof(__m128i));
+	memset(blockhash.v, 0, BLOCK_SIZE);
 
 	
 }

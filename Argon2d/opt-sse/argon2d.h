@@ -21,7 +21,7 @@
 #define BYTES_IN_BLOCK (1024*BLOCK_SIZE_KILOBYTE)
 #define BLOCK_SIZE BYTES_IN_BLOCK
 #define VERSION_NUMBER 0x10
-#define BLAKE_INPUT_HASH_SIZE 32
+#define BLAKE_INPUT_HASH_SIZE 64
 #define BLAKE_OUTPUT_HASH_SIZE 64
 #define KAT_FILENAME "kat-argon2d-opt.log"
 
@@ -31,7 +31,23 @@
 #define BYTES_TO_GIGABYTES 		(1024 * 1024 * 1024 * 1.0)
 
 
-#define FEEDBACK
+struct scheme_info_t
+{
+	uint8_t *state;
+	uint32_t mem_size;
+	uint32_t passes;
+	uint8_t lanes;
+	scheme_info_t(uint8_t* s, uint32_t m, uint8_t p, uint8_t l){ state = s; mem_size = m; passes = p; lanes = l; }
+};
+
+struct position_info_t {
+
+	uint32_t pass;
+	uint8_t slice;
+	uint8_t lane;
+	uint32_t index;
+	position_info_t(uint32_t p = 0, uint8_t s = 0, uint8_t l = 0, uint32_t i = 0){ pass = p; slice = s; lane = l; index = i; }
+};
 
 extern int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
 	uint32_t t_cost, uint32_t m_cost);

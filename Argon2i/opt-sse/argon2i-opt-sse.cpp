@@ -151,34 +151,27 @@ void ComputeBlock(__m128i *state, uint8_t* ref_block_ptr, uint8_t* next_block_pt
 
 
 
-void Initialize(uint8_t *state,uint8_t* input_hash,uint8_t lanes, uint32_t m_cost)
+void Initialize(scheme_info_t* info,uint8_t* input_hash)
 {
-	__m128i blockhash[BLOCK_SIZE / 16];
-	uint8_t blockcounter[BLOCK_SIZE];
-	memset(blockcounter, 0, BLOCK_SIZE);
-	for (uint8_t l = 0; l < lanes; ++l)
+	uint8_t block_input[BLAKE_INPUT_HASH_SIZE + 8];
+	uint32_t segment_length = (info->mem_size / (SYNC_POINTS*(info->lanes)));
+	memcpy(block_input, input_hash, BLAKE_INPUT_HASH_SIZE);
+	memset(block_input + BLAKE_INPUT_HASH_SIZE, 0, 8);
+	for (uint8_t l = 0; l < info->lanes; ++l)
 	{
-		blockcounter[4] = l;
-		blockcounter[0] = 0;
-		memset(blockhash, 0, BLOCK_SIZE);
-		memcpy(blockhash, input_hash, BLAKE_INPUT_HASH_SIZE);
-		ComputeBlock(blockhash, blockcounter, state+l * (m_cost / (SYNC_POINTS*lanes))*BYTES_IN_BLOCK);
-		blockcounter[0] = 1;
-		memset(blockhash, 0, BLOCK_SIZE);
-		memcpy(blockhash, input_hash, BLAKE_INPUT_HASH_SIZE);
-		ComputeBlock(blockhash, blockcounter, state + (l * (m_cost / (SYNC_POINTS*lanes)) + 1)*BYTES_IN_BLOCK);
+		block_input[BLAKE_INPUT_HASH_SIZE + 4] = l;
+		block_input[BLAKE_INPUT_HASH_SIZE] = 0;
+		blake2b_long(info->state + l * segment_length*BLOCK_SIZE, block_input, BLOCK_SIZE, BLAKE_INPUT_HASH_SIZE + 8);
+		block_input[BLAKE_INPUT_HASH_SIZE] = 1;
+		blake2b_long(info->state + (l * segment_length + 1)*BLOCK_SIZE, block_input, BLOCK_SIZE, BLAKE_INPUT_HASH_SIZE + 8);
 	}
-	memset(blockhash, 0, 64 * sizeof(__m128i));
+	memset(block_input, 0, BLAKE_INPUT_HASH_SIZE + 8);
 }
 
 void Finalize(uint8_t *state, uint8_t* out, uint32_t outlen, uint8_t lanes, uint32_t m_cost)//XORing the last block of each lane, hashing it, making the tag.
 {
-	uint8_t tag_buffer[64];
-	blake2b_state BlakeHash;
 	__m128i blockhash[BLOCK_SIZE/16];
 	memset(blockhash, 0, BLOCK_SIZE);
-	
-
 	for (uint8_t l = 0; l < lanes; ++l)//XORing all last blocks of the lanes
 	{
 		uint32_t segment_length = m_cost / (SYNC_POINTS*lanes);
@@ -189,27 +182,8 @@ void Finalize(uint8_t *state, uint8_t* out, uint32_t outlen, uint8_t lanes, uint
 			blockhash[j] = _mm_xor_si128(blockhash[j], *(__m128i*)block_ptr);
 			block_ptr += 16;
 		}
-
 	}
-
-	blake2b_init(&BlakeHash, BLAKE_OUTPUT_HASH_SIZE);
-	blake2b_update(&BlakeHash, (uint8_t*)&blockhash, BLOCK_SIZE);
-
-	uint8_t* out_flex = out;
-	uint32_t outlen_flex = outlen;
-	while (outlen_flex > BLAKE_OUTPUT_HASH_SIZE/2)//Outputting BLAKE_OUTPUT_HASH_SIZE/2 bytes at a time
-	{
-		blake2b_final(&BlakeHash, tag_buffer, BLAKE_OUTPUT_HASH_SIZE);
-		memcpy(out_flex, tag_buffer, BLAKE_OUTPUT_HASH_SIZE/2);
-		out_flex += BLAKE_OUTPUT_HASH_SIZE/2;
-		outlen_flex -= BLAKE_OUTPUT_HASH_SIZE/2;
-		blake2b_init(&BlakeHash, BLAKE_OUTPUT_HASH_SIZE);
-		blake2b_update(&BlakeHash, tag_buffer, BLAKE_OUTPUT_HASH_SIZE);
-	}
-	blake2b_final(&BlakeHash, tag_buffer, outlen_flex);
-	memcpy(out_flex, tag_buffer, outlen_flex);
-	memset(tag_buffer, 0, BLAKE_OUTPUT_HASH_SIZE);
-	memset(blockhash, 0, BLOCK_SIZE);
+	blake2b_long(out, blockhash, outlen, BLOCK_SIZE);
 
 #ifdef KAT
 	FILE* fp = fopen(KAT_FILENAME, "a+");
@@ -257,7 +231,7 @@ void GenerateAddresses(const scheme_info_t* info, position_info_t* position, uin
 	if (position->pass == 0)//Including later slices for second and later passes
 	{
 		barrier2 = barrier1;
-		if (position->slice == 0)
+		if (position->slice == 0 && position->index==0)
 			start = 2;
 	}
 	else
@@ -304,18 +278,18 @@ void GenerateAddresses(const scheme_info_t* info, position_info_t* position, uin
 	}
 }
 
-void FillSegment(const scheme_info_t* info, const position_info_t* position)
+void FillSegment(const scheme_info_t* info, const position_info_t position)
 {
 	__m128i prev_block[64];
 	uint32_t addresses[ADDRESSES_PER_BLOCK];
 	uint32_t next_block_offset;
 	uint8_t *memory = info->state;
-	uint32_t pass = position->pass;
-	uint32_t slice = position->slice;
-	uint8_t lane = position->lane;
+	uint32_t pass = position.pass;
+	uint32_t slice = position.slice;
+	uint8_t lane = position.lane;
 	uint8_t lanes = info->lanes;
 	uint32_t m_cost = info->mem_size;
-	position_info_t position_local = *position;
+	position_info_t position_local = position;
 
 	uint32_t segment_length = m_cost / (lanes*SYNC_POINTS);
 	//uint32_t stop = segment_length;//Number of blocks to produce in the segment, is different for the first slice, first pass
@@ -385,19 +359,15 @@ void FillMemory(const scheme_info_t* info)//Main loop: filling memory <t_cost> t
 			position.slice = s;
 			for (uint32_t t = 0; t < info->lanes; t++)
 			{
-#ifdef PRINT_THREAD			
-				printf("%" PRIu32 " :I will pass: %" PRIu64 " %" PRIu64 " %" PRIu64 "\n", t, p, s, l);
-#endif	
 				position.lane = t;
-				//Threads.push_back(thread(FillSegment,info,&position));
-				FillSegment(info, &position);
+				//Threads.push_back(thread(FillSegment,info,position));
+				FillSegment(info, position);
 			}
-
-			/*for (auto& th : Threads)
+			for (auto& th : Threads)
 			{
 				th.join();
 			}
-			Threads.clear();*/
+			Threads.clear();
 		}
 #ifdef KAT_INTERNAL
 		FILE* fp = fopen(KAT_FILENAME, "a+");
@@ -520,7 +490,7 @@ int Argon2iOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	allocate_memory(&memory,m_cost);
 	scheme_info_t info(memory, m_cost, t_cost, lanes);
 	
-	Initialize(memory,blockhash,lanes,m_cost); //Computing first two blocks in each segment
+	Initialize(&info,blockhash); //Computing first two blocks in each segment
 
 
 	FillMemory(&info);  //Filling memory with <t_cost> passes
