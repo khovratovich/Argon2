@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <time.h> 
 
-#include <string>
+#include <string.h>
 #include <vector>
 #include <thread>
 using namespace std;
@@ -300,7 +300,7 @@ void FillMemory(scheme_info_t* info) //Main loop: filling memory <t_cost> times
 		fprintf(fp, "\n After pass %d:\n", r);
 		for (uint32_t i = 0; i < info->mem_size; ++i)
 		{
-			fprintf(fp, "Block %.4d [0]: %x\n", i, info->state[i][0]);
+			fprintf(fp, "Block %.4d [0]: %x\n", i, (uint32_t)info->state[i][0]);
 
 		}
 		fclose(fp);
@@ -369,8 +369,8 @@ int Argon2iRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	return 0;
 }
 
-int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
-	uint32_t t_cost, uint32_t m_cost)
-{
-	return Argon2iRef((uint8_t*)out, outlen, (const uint8_t*)in, inlen, (const uint8_t*)salt, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, 1);
-}
+int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
+	 unsigned int t_cost, unsigned int m_cost)
+ {
+	return Argon2iRef((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
+ }

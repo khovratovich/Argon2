@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <time.h> 
 
-#include <string>
+#include <string.h>
 #include <vector>
 #include <thread>
 using namespace std;
@@ -253,7 +253,7 @@ void Finalize(block* state, uint8_t *out, uint32_t outlen, uint32_t m_cost, uint
 	fprintf(fp, "\n");
 	fclose(fp);
 #endif 
-	memset(blockhash.v, 0, 64 * sizeof(__m128i));
+	memset(blockhash.v, 0, 64 * 16);
 
 	
 }
@@ -341,9 +341,7 @@ int Argon2dRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	Finalize(state,out,outlen,m_cost,lanes);
 	return 0;
 }
-
-int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
-	uint32_t t_cost, uint32_t m_cost)
+int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen, unsigned int t_cost, unsigned int m_cost)
 {
-	return Argon2dRef((uint8_t*)out, outlen, (const uint8_t*)in, inlen, (const uint8_t*)salt, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, 1);
+	return Argon2dRef((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
 }

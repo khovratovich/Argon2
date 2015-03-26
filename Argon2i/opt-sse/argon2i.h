@@ -51,8 +51,9 @@ struct position_info_t {
 	position_info_t(uint32_t p = 0, uint8_t s = 0, uint8_t l = 0, uint32_t i = 0){ pass = p; slice = s; lane = l; index = i; }
 };
 
-extern int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
-	uint32_t t_cost, uint32_t m_cost);
+extern "C" int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
+	unsigned int t_cost, unsigned int m_cost);
+
 
 extern int Argon2iOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes);

@@ -84,7 +84,7 @@ void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, t
 	unsigned char one_array[256];
 	memset(one_array, 1, 256);
 
-	for (size_t m_cost = (size_t)1 << 1; m_cost <= (size_t)1 << 22; m_cost *= 2)
+	for (uint32_t m_cost = (uint32_t)1 << 1; m_cost <= (uint32_t)1 << 22; m_cost *= 2)
 	{
 		for (uint32_t thread_n = 1; thread_n <= 16; thread_n++)
 		{

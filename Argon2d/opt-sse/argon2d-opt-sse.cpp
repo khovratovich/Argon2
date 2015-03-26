@@ -99,6 +99,9 @@ void ComputeBlock(__m128i *state, uint8_t* ref_block_ptr, uint8_t* next_block_pt
 
 	// BLAKE2 - begin
 
+	for(unsigned i=0; i<1; ++i)
+{
+
 	BLAKE2_ROUND(state[0], state[1], state[2], state[3],
 		state[4], state[5], state[6], state[7]);
 
@@ -131,8 +134,7 @@ void ComputeBlock(__m128i *state, uint8_t* ref_block_ptr, uint8_t* next_block_pt
 		state[33], state[41], state[49], state[57]);
 
 	BLAKE2_ROUND(state[2], state[10], state[18], state[26],
-		state[34], state[42], state[50], state[58]);
-
+		state[34], state[42], state[50], state[58])
 	BLAKE2_ROUND(state[3], state[11], state[19], state[27],
 		state[35], state[43], state[51], state[59]);
 
@@ -149,7 +151,7 @@ void ComputeBlock(__m128i *state, uint8_t* ref_block_ptr, uint8_t* next_block_pt
 		state[39], state[47], state[55], state[63]);
 
 	// BLAKE2 - end
-
+}
 	for (uint8_t i = 0; i< 64; i++)
 	{
 		state[i] = _mm_xor_si128(state[i], ref_block[i]); //Feedback
@@ -330,9 +332,12 @@ void FillMemory(scheme_info_t *info)//Main loop: filling memory <t_cost> times
 				positions[t].pass = p;
 				positions[t].slice = s;
 				positions[t].lane = t;
-				Threads.push_back(thread(FillSegment, info, positions[t]));
+				Threads.push_back(thread(FillSegment,info,positions[t]));
 				//FillSegment(info,positions[t]);
-	
+		
+#ifdef PRINT_THREAD
+				sleep(5);
+#endif
 			}
 
 			for (auto& th : Threads)
@@ -501,8 +506,7 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	return 0;
 }
 
-int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
-	uint32_t t_cost, uint32_t m_cost)
+int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen, unsigned int t_cost, unsigned int m_cost)
 {
-	return Argon2dOpt((uint8_t*)out, outlen, (const uint8_t*)in, inlen, (const uint8_t*)salt, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, 1);
+	return Argon2dOpt((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
 }

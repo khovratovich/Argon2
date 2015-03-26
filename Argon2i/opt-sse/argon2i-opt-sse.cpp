@@ -360,8 +360,8 @@ void FillMemory(const scheme_info_t* info)//Main loop: filling memory <t_cost> t
 			for (uint32_t t = 0; t < info->lanes; t++)
 			{
 				position.lane = t;
-				//Threads.push_back(thread(FillSegment,info,position));
-				FillSegment(info, position);
+				Threads.push_back(thread(FillSegment,info,position));
+				//FillSegment(info, position);
 			}
 			for (auto& th : Threads)
 			{
@@ -530,8 +530,8 @@ int Argon2iOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	return 0;
 }
 
-int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
-	uint32_t t_cost, uint32_t m_cost)
-{
-	return Argon2iOpt((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, t_cost, m_cost, 1);
-}
+int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
+	 unsigned int t_cost, unsigned int m_cost)
+ {
+	return Argon2iOpt((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
+ }

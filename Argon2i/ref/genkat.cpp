@@ -70,7 +70,7 @@ void GenKat()
 	}
 }
 
-void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, tcost 3, and different threads and mcost
+void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, tcost 1, and different threads and mcost
 {
 	unsigned char out[32];
 	int i = 0;
@@ -103,7 +103,7 @@ void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, t
 			clock_t finish = clock();
 			d2 = (i3 - i2) / (m_cost);
 			float mcycles = (float)(i3 - i2) / (1 << 20);
-			printf("Argon2d %d pass(es)  %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles\n ", t_cost, m_cost >> 10, thread_n, (float)d2 / 1000, mcycles);
+			printf("Argon2i Reference %d pass(es)  %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles\n ", t_cost, m_cost>>10, thread_n, (float)d2 / 1000, mcycles);
 			float run_time = ((float)finish - start) / (CLOCKS_PER_SEC);
 			//printf("%2.4f seconds\n\n", run_time);
 #endif

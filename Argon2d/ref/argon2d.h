@@ -37,11 +37,11 @@ struct block{
 	block(){ memset(v, 0, BYTES_IN_BLOCK); }
 	uint64_t& operator[](uint8_t i){ return *(uint64_t*)(v + 8 * i); }
 	block& operator=(const block& r){ memcpy(v, r.v, BYTES_IN_BLOCK); return *this; }
-	block operator^(const block& r){ block a; for (unsigned j = 0; j < BYTES_IN_BLOCK; ++j) a.v[j] = v[j] ^ r.v[j]; return a; }
+	block operator^(const block& r){static block a; for (unsigned j = 0; j < BYTES_IN_BLOCK; ++j) a.v[j] = v[j] ^ r.v[j]; return a; }
 };
 
-extern int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, uint32_t  saltlen,
-	uint32_t t_cost, uint32_t m_cost);
+extern "C" int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
+	unsigned int t_cost, unsigned int m_cost);
 
 extern int Argon2dRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes);

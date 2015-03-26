@@ -78,7 +78,7 @@ void GenKat()
 	}
 }
 
-void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, tcost 3, and different threads and mcost
+void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, tcost 1, and different threads and mcost
 {
 	unsigned char out[32];
 	int i = 0;
