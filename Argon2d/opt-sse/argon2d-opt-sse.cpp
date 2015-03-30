@@ -396,7 +396,7 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 
 	m_cost = (m_cost / (lanes*SYNC_POINTS))*(lanes*SYNC_POINTS); //Ensure that all segments have equal length;
 
-	//minimum t_cost =3
+	//minimum t_cost =1
 	if (t_cost<MIN_TIME)
 		t_cost = MIN_TIME;
 

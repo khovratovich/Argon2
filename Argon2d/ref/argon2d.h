@@ -7,7 +7,7 @@
 #define MIN_OUTLEN 4
 #define MIN_MEMORY 1
 #define MAX_MEMORY 0xFFFFFFFF
-#define MIN_TIME 2
+#define MIN_TIME 1
 #define MIN_MSG 0
 #define MAX_MSG 0xFFFFFFFF
 #define MIN_AD  0
