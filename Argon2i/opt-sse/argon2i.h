@@ -39,7 +39,7 @@ struct scheme_info_t
 	uint32_t mem_size;
 	uint32_t passes;
 	uint8_t lanes;
-	scheme_info_t(uint8_t* s, uint32_t m, uint8_t p, uint8_t l){ state = s; mem_size = m; passes = p; lanes = l; }
+	scheme_info_t(uint8_t* s, uint32_t m, uint32_t p, uint8_t l){ state = s; mem_size = m; passes = p; lanes = l; }
 };
 
 struct position_info_t {
