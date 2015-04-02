@@ -285,7 +285,7 @@ void Finalize(scheme_info_t* info, uint8_t *out, uint32_t outlen)//XORing the la
 
 void FillMemory(scheme_info_t* info) //Main loop: filling memory <t_cost> times
 {
-	for (uint8_t r = 0; r < info->passes; ++r)
+	for (uint32_t r = 0; r < info->passes; ++r)
 	{
 		for (uint8_t s = 0; s < SYNC_POINTS; ++s)
 		{
