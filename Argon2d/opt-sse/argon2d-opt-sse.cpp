@@ -27,18 +27,17 @@ using namespace std;
 
 #endif
 // BLAKE2 round
-#include "blake2-round.h"
+#include "blake2-round-mka.h"
 #include "blake2.h"
 
 // Constants
-# include "argon2d.h"
+#include "argon2d.h"
 
 
 // The block size in bytes
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 1024
 #endif
-
 
 
 #define MEASURE
@@ -226,6 +225,7 @@ void FillSegment(scheme_info_t *info, position_info_t pos)
 	uint8_t lanes = info->lanes;
 	uint8_t* memory = info->state;
 	uint32_t phi;
+	uint32_t phi2;
 
 	uint32_t segment_length = (info->mem_size) / (lanes*SYNC_POINTS);
 	//uint32_t stop = segment_length;//Number of blocks to produce in the segment, is different for the first slice, first pass
@@ -240,7 +240,7 @@ void FillSegment(scheme_info_t *info, position_info_t pos)
 		if (segment_length <= 2)
 			return;
 
-		uint32_t bi = prev_block_offset = (pos.lane * segment_length + 1) * BLOCK_SIZE;;//<bi> -- temporary variable for loading previous block
+		uint32_t bi = prev_block_offset = (pos.lane * segment_length + 1) * BLOCK_SIZE;//<bi> -- temporary variable for loading previous block
 		for (uint8_t i = 0; i < 64; i++)
 		{
 			prev_block[i] = _mm_load_si128((__m128i *) &memory[bi]);
@@ -254,7 +254,7 @@ void FillSegment(scheme_info_t *info, position_info_t pos)
 		// compute block
 		ComputeBlock(prev_block, memory+ reference_block_offset, memory+next_block_offset);//Computing third block in the segment
 
-		phi = _mm_extract_epi32(prev_block[0], 0);
+		phi = _mm_extract_epi32(prev_block[0], 0); 
 	}
 	else
 	{
@@ -273,42 +273,41 @@ void FillSegment(scheme_info_t *info, position_info_t pos)
 	next_block_offset = ((pos.slice*lanes + pos.lane)*segment_length + start)*BLOCK_SIZE;
 	for(uint32_t i = start; i < segment_length; i++)
 	{
-		// Compute block2 index
-		uint32_t barrier1 = pos.slice * segment_length*lanes; //Number of blocks generated in previous slices
+		/*NEW*/
+		uint8_t ref_lane;
+		if(pos.pass==0 && pos.slice==0)
+			ref_lane = pos.lane;
+		else ref_lane = (phi>>24)%lanes; //lane to where we reference
+		uint32_t ref_positions; //how many positions we can reference in that lane
+		uint32_t start_position;
 		
-		uint32_t barrier2;  //Number of blocks that we can reference in total (including the previous block in the lane that we can not reference in the first block of the segment)
-		if(pos.pass==0)
-			barrier2 = barrier1;  
-		else
+		if(ref_lane==pos.lane) //this lane
 		{
-			barrier2 = barrier1 + (SYNC_POINTS - pos.slice - 1) *  segment_length*lanes;
-		}
-
-		uint32_t barrier3 = (i==0)? (barrier2 -lanes):(barrier2+ i-1);
-
-		uint32_t r = barrier3;
-		uint32_t reference_block_offset = (phi % r);
-		
-		/*Excluding the previous block from referencing*/
-		if(i==0)
-		{
-			if (reference_block_offset >= prev_block_recalc)
-			{
-				uint32_t shift = (reference_block_offset - prev_block_recalc) / (segment_length - 1);
-				reference_block_offset += (shift > lanes) ? lanes : shift;
-			}
-		}
-
-		//Mapping the reference block address into the memory
-		if(reference_block_offset < barrier1)
-			reference_block_offset *= BLOCK_SIZE;
-		else
-		{
-			if(reference_block_offset >= barrier1 && reference_block_offset < barrier2)
-				reference_block_offset = (reference_block_offset + segment_length*lanes) * BLOCK_SIZE;
+			if(pos.pass==0)//first pass
+				ref_positions = (pos.slice)*segment_length+i-1;
 			else
-				reference_block_offset = (reference_block_offset - (barrier2 - barrier1) + pos.lane *  segment_length) * BLOCK_SIZE;
+				ref_positions = (SYNC_POINTS-1)*segment_length+i-1;
 		}
+		else
+		{
+			if(pos.pass==0)//first pass => not the first slice
+				ref_positions = (pos.slice)*segment_length - ((i==0)?1:0);
+
+			else ref_positions = (SYNC_POINTS-1)*segment_length - ((i==0)?1:0);
+		}
+		uint64_t position = (phi&0xFFFFFF);
+		position = position*position >> 24;
+		position = ref_positions-1-((ref_positions-1)*position >>24);
+		
+		//Computing offset
+		if(pos.pass==0)
+			start_position = 0;
+		else start_position = (pos.slice+1)*segment_length;
+		position = (start_position + position) % (SYNC_POINTS*segment_length); //absolute position
+		uint32_t ref_slice = position / segment_length;
+		uint32_t ref_index = position % segment_length;
+		uint32_t reference_block_offset = (ref_index + (ref_lane + ref_slice*lanes) *segment_length)*BLOCK_SIZE;
+		/*END-NEW*/
 	
 		// compute block
 		ComputeBlock(prev_block, memory + reference_block_offset, memory+next_block_offset);
@@ -332,8 +331,8 @@ void FillMemory(scheme_info_t *info)//Main loop: filling memory <t_cost> times
 				positions[t].pass = p;
 				positions[t].slice = s;
 				positions[t].lane = t;
-				Threads.push_back(thread(FillSegment,info,positions[t]));
-				//FillSegment(info,positions[t]);
+				//Threads.push_back(thread(FillSegment,info,positions[t]));
+				FillSegment(info,positions[t]);
 		
 #ifdef PRINT_THREAD
 				sleep(5);
@@ -359,8 +358,8 @@ void FillMemory(scheme_info_t *info)//Main loop: filling memory <t_cost> times
 	}
 }
 
-
-int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
+/*Optimized version */
+int Argon2d(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
 {
 	if (outlen>MAX_OUTLEN)
@@ -396,7 +395,7 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 
 	m_cost = (m_cost / (lanes*SYNC_POINTS))*(lanes*SYNC_POINTS); //Ensure that all segments have equal length;
 
-	//minimum t_cost =1
+	//minimum t_cost =3
 	if (t_cost<MIN_TIME)
 		t_cost = MIN_TIME;
 
@@ -405,7 +404,6 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	if (lanes>m_cost / BLOCK_SIZE_KILOBYTE)
 		lanes = m_cost / BLOCK_SIZE_KILOBYTE;
 
-	uint64_t begin, end;
 	unsigned int ui1, ui2; 
 	//struct timeval tv1, tv2;
 
@@ -414,6 +412,8 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 	uint8_t *memory;
 	
 #ifdef MEASURE
+	uint64_t begin, end;
+	
 //	gettimeofday(&tv1, NULL);
 	begin = __rdtscp(&ui1);
 #endif 
@@ -508,5 +508,5 @@ int Argon2dOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 
 int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen, unsigned int t_cost, unsigned int m_cost)
 {
-	return Argon2dOpt((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
+	return Argon2d((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
 }
