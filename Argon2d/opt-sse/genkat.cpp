@@ -54,7 +54,7 @@ void GenKat()
 						clock_t start = clock();
 						i2 = __rdtscp(&ui2);
 #endif
-						Argon2dOpt(out, outlen, zero_array, p_len, one_array, s_len, NULL, 0, NULL, 0, t_cost, m_cost, thr);
+						Argon2d(out, outlen, zero_array, p_len, one_array, s_len, NULL, 0, NULL, 0, t_cost, m_cost, thr);
 #ifdef _MEASURE
 						i3 = __rdtscp(&ui3);
 						clock_t finish = clock();
@@ -104,7 +104,7 @@ void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, t
 			i2 = __rdtscp(&ui2);
 #endif
 
-			Argon2dOpt(out, outlen, zero_array, inlen, one_array, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, thread_n);
+			Argon2d(out, outlen, zero_array, inlen, one_array, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, thread_n);
 
 #ifdef _MEASURE
 			i3 = __rdtscp(&ui3);
