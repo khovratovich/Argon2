@@ -15,7 +15,7 @@
 #include <thread>
 using namespace std;
 
-#include "blake-round.h"
+#include "blake-round-mka.h"
 #include "blake2-impl.h"
 #include "blake2.h"
 #include "argon2i.h"
@@ -103,39 +103,38 @@ void GenerateAddresses(const scheme_info_t* info, position_info_t* position, uin
 		if (position->slice == 0 && position->pass == 0 && position->index==0&& i <2)
 			continue;
 		uint32_t pseudo_rand = ((uint32_t*)address_block.v)[i];
-		uint32_t total_area = reference_area_size  +(position->index)*ADDRESSES_PER_BLOCK+ i - 1;
-		if (position->index == 0 && i == 0) //Special rule for the first block of the segment, except for the very beginning (i==0 is skipped in the first slice, first pass)
+		/*NEW*/
+		ref_lane = (pseudo_rand >> 24) % lanes;
+
+		uint32_t start_position = 0;
+		if (pass == 0)//first pass
 		{
-			total_area -= lanes - 1; //Excluding last blocks of the other lanes
-			uint32_t recalculation_start = 0;
-			pseudo_rand %= total_area;
-			if (slice == 0)
-				recalculation_start = BLOCK(0, SYNC_POINTS - 2, 0);
-			else
-				recalculation_start = BLOCK(0, slice - 1, 0);
-			if (pseudo_rand > recalculation_start)//we are in the previous slice and have to recalculate
+			if (slice == 0)//first slice
 			{
-				uint32_t recalc_shift = (pseudo_rand - recalculation_start) / (segment_length - 1);
-				pseudo_rand += (recalc_shift > lanes) ? (lanes) : recalc_shift; //Adding "missed" blocks to correctly locate reference block in the memory
+				ref_lane = lane;
+				reference_area_size = i - 1; //all but the previous
 			}
+			else if (ref_lane == lane)//the same lane => add current segment
+				reference_area_size = slice*segment_length + i - 1;
+			else reference_area_size = slice*segment_length + ((i == 0) ? (-1) : 0);
 		}
-		else
-			pseudo_rand %= total_area;
-		//Mapping pseudo_rand to the memory
-		if (pseudo_rand >= reference_area_size)
+		else //second pass, no first slice rule
 		{
-			ref_index = pseudo_rand - reference_area_size;
-			ref_slice = slice;
-			ref_lane = lane;
+			start_position = (slice == SYNC_POINTS - 1) ? 0 : (slice + 1)*segment_length;
+			if (ref_lane == lane)//the same lane
+				reference_area_size = (SYNC_POINTS - 1)*segment_length + i - 1;
+			else reference_area_size = (SYNC_POINTS - 1)*segment_length + ((i == 0) ? (-1) : 0);
 		}
-		else //Reference block is in other slices, in all lanes
-		{
-			ref_slice = pseudo_rand / (lanes*segment_length);
-			ref_lane = (pseudo_rand / segment_length) % lanes;
-			ref_index = pseudo_rand%segment_length;
-			if (ref_slice >= slice) //This means we refer to next lanes in a previous pass
-				ref_slice++;
-		}
+
+		uint64_t position = (pseudo_rand & 0xFFFFFF); //last 24 bits for the position
+		position = position*position >> 24;
+		position = reference_area_size - 1 - ((reference_area_size - 1)*position >> 24);//mapping pseudo-rand into [0;reference_area_size)
+
+		position = (start_position + position) % (SYNC_POINTS*segment_length); //absolute position
+		ref_index = position %segment_length;
+		ref_slice = position / segment_length;
+
+		/*ENDNEW*/
 		addresses[i] = BLOCK(ref_lane, ref_slice, ref_index);
 	}
 }
@@ -308,7 +307,7 @@ void FillMemory(scheme_info_t* info) //Main loop: filling memory <t_cost> times
 	}
 }
 
-int Argon2iRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
+int Argon2i(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
 {
 	if (outlen>MAX_OUTLEN)
@@ -373,5 +372,5 @@ int Argon2iRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
 	 unsigned int t_cost, unsigned int m_cost)
  {
-	return Argon2iRef((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
+	return Argon2i((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
  }

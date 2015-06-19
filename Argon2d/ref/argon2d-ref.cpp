@@ -15,7 +15,7 @@
 #include <thread>
 using namespace std;
 
-#include "blake-round.h"
+#include "blake-round-mka.h"
 #include "blake2-impl.h"
 #include "blake2.h"
 #include "argon2d.h"
@@ -76,17 +76,8 @@ void FillSegment(block* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 {
 	uint32_t segment_length = m_cost /(lanes* (uint32_t)SYNC_POINTS);   //Computing length of the slice
 
-	uint32_t reference_area_size;//Number of blocks outside of the slice to reference
-	/*Computing number of blocks to reference, except current slice*/
-	if (round == 0)
-	{
-		reference_area_size = lanes*slice*segment_length;
-	}
-	else
-		reference_area_size = lanes*(SYNC_POINTS-1)*segment_length;
+	uint32_t reference_area_size,start_position;//Number of blocks outside of the slice to reference
 	
-	//Filling blocks, preparing macro for referencing blocks in memory
-
 	uint32_t pseudo_rand, ref_index, ref_lane, ref_slice;
 	block addresses;
 	block prev_block;  //previous block
@@ -120,36 +111,41 @@ void FillSegment(block* state, uint32_t m_cost, uint8_t lanes, uint32_t round, u
 		/*1. Computing the reference block*/
 		/*1.1 Taking pseudo-random value from the previous block */
 		pseudo_rand = *(uint32_t*)prev_block.v;
+
 		/*1.2 Computing reference block location*/
-		uint32_t total_area = (i == 0) ? (reference_area_size - lanes) : (reference_area_size + i - 1); //Excluding previous blocks and other last segment blocks if necessary
-		pseudo_rand %= total_area;
-		if (i == 0)
+		/*NEW*/
+		ref_lane = (pseudo_rand >> 24) % lanes;
+
+		if (round == 0)//first pass
 		{
-			if (pseudo_rand > recalculation_start)//we are in the previous slice and have to recalculate
+			start_position = 0;
+			if (slice == 0)//first slice
 			{
-				uint32_t recalc_shift = (pseudo_rand - recalculation_start)/(segment_length-1);
-				pseudo_rand += (recalc_shift > lanes) ? (lanes) : recalc_shift; //Adding "missed" blocks to correctly locate reference block in the memory
+				ref_lane = lane;
+				reference_area_size = i - 1; //all but the previous
 			}
+			else if (ref_lane == lane)//the same lane => add current segment
+				reference_area_size = slice*segment_length + i - 1;
+			else reference_area_size = slice*segment_length + ((i==0)?(- 1):0);
 		}
-		/*if ((i == 0) && ((pseudo_rand >= prev_index) && (slice>0) ||
-			(pseudo_rand + m_cost / SYNC_POINTS >= prev_index) && (slice==0)))//If previous block is in another segment
-				pseudo_rand++;*/
-		if (pseudo_rand>=reference_area_size)
+		else //second pass, no first slice rule
 		{
-			ref_index = pseudo_rand - reference_area_size;
-			ref_slice = slice;
-			ref_lane = lane;
+			start_position = (slice == SYNC_POINTS - 1) ? 0 : (slice + 1)*segment_length;
+			if (ref_lane==lane)//the same lane
+				reference_area_size = (SYNC_POINTS-1)*segment_length + i - 1;
+			else reference_area_size = (SYNC_POINTS - 1)*segment_length + ((i == 0) ? (-1) : 0);
 		}
-		else //Reference block is in other slices, in all lanes
-		{
-			
+
+		uint64_t position = (pseudo_rand & 0xFFFFFF); //last 24 bits for the position
+		position = position*position >> 24;
+		position = reference_area_size - 1 - ((reference_area_size - 1)*position >> 24);//mapping pseudo-rand into [0;reference_area_size)
+
+		position = (start_position + position) % (SYNC_POINTS*segment_length); //absolute position
+		ref_index = position %segment_length;
+		ref_slice = position / segment_length;
+
+		/*ENDNEW*/
 		
-			ref_slice = pseudo_rand / (lanes*segment_length);
-			ref_lane = (pseudo_rand / segment_length) % lanes;
-			ref_index = pseudo_rand%segment_length;
-			if (ref_slice >= slice) //This means we refer to next lanes in a previous pass
-				ref_slice++;
-		}
 		/*2.Creating a new block*/
 		block ref_block = state[BLOCK(ref_lane,ref_slice,ref_index)];  //random block from memory
 		
@@ -282,7 +278,8 @@ void FillMemory(block* state, uint32_t t_cost, uint32_t m_cost, uint8_t lanes) /
 	}
 }
 
-int Argon2dRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
+/*reference version*/
+int Argon2d(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
 {
 	if (outlen>MAX_OUTLEN)
@@ -343,5 +340,5 @@ int Argon2dRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 }
 int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen, unsigned int t_cost, unsigned int m_cost)
 {
-	return Argon2dRef((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
+	return Argon2d((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
 }

@@ -27,7 +27,7 @@ using namespace std;
 
 #endif
 // BLAKE2 round
-#include "blake2-round.h"
+#include "blake2-round-mka.h"
 #include "blake2.h"
 
 // Constants
@@ -224,57 +224,48 @@ void GenerateAddresses(const scheme_info_t* info, position_info_t* position, uin
 
 	/*Making block offsets*/
 	uint32_t segment_length = info->mem_size / ((info->lanes)*SYNC_POINTS);
-	uint32_t barrier1 = (position->slice) * segment_length*(info->lanes); //Number of blocks generated in previous slices
-	uint32_t barrier2;  //Number of blocks that we can reference in total (including the last blocks of each lane
-
 	uint32_t start = 0;
-	if (position->pass == 0)//Including later slices for second and later passes
-	{
-		barrier2 = barrier1;
-		if (position->slice == 0 && position->index==0)
-			start = 2;
-	}
-	else
-		barrier2 = barrier1 + (SYNC_POINTS - position->slice - 1) *  segment_length*(info->lanes);
-	
-	if (position->index == 0 && start==0)/*Special rule for first block of the segment, if not very first blocks*/
-	{
-		uint32_t r = barrier2 - (info->lanes);
-		uint32_t reference_block_index = addresses[0] % r;
-		uint32_t prev_block_recalc = (position->slice > 0) ? ((position->slice - 1)*(info->lanes)*segment_length) : (SYNC_POINTS - 2)*(info->lanes)*segment_length;
-
-		/*Shifting <reference_block_index> to have gaps in the last blocks of each lane*/
-		if (reference_block_index >= prev_block_recalc)
-		{
-			uint32_t shift = (reference_block_index - prev_block_recalc) / (segment_length - 1);
-			reference_block_index += (shift > info->lanes) ? info->lanes : shift;
-		}
-		if (reference_block_index < barrier1)
-			addresses[0] = reference_block_index*BLOCK_SIZE;
-		else
-		{
-			if (reference_block_index >= barrier1 && reference_block_index < barrier2)
-				addresses[0] = (reference_block_index + segment_length*(info->lanes)) * BLOCK_SIZE;
-			else
-				addresses[0] = (reference_block_index - (barrier2 - barrier1) + (position->lane) *  segment_length) * BLOCK_SIZE;
-		}
-		start = 1;
-	}
-	
+	if (position->pass == 0 && position->slice == 0 && position->index==0) //first pass, first slice, first call
+		start = 2;
 	for (uint32_t i = start; i < ADDRESSES_PER_BLOCK; ++i)
-	{
-		uint32_t r = barrier2 + (position->index)*ADDRESSES_PER_BLOCK+i - 1;
-		uint32_t reference_block_index = addresses[i] % r;
-		//Mapping the reference block address into the memory
-		if (reference_block_index < barrier1)
-			addresses[i] = reference_block_index*BLOCK_SIZE;
+	{	
+		/*NEW*/
+		uint8_t ref_lane;
+		uint32_t phi = addresses[i];
+		if(position->pass==0 && position->slice==0)
+			ref_lane = position->lane;
+		else ref_lane = (phi>>24)%(info->lanes); //lane to where we reference
+		uint32_t ref_positions; //how many positions we can reference in that lane
+		uint32_t start_position;
+	
+		if(ref_lane==position->lane) //this lane
+		{
+			if(position->pass==0)//first pass
+				ref_positions = (position->slice)*segment_length+i-1;
+			else
+				ref_positions = (SYNC_POINTS-1)*segment_length+i-1;
+		}
 		else
 		{
-			if (reference_block_index >= barrier1 && reference_block_index < barrier2)
-				addresses[i] = (reference_block_index + segment_length*(info->lanes)) * BLOCK_SIZE;
-			else
-				addresses[i] = (reference_block_index - (barrier2 - barrier1) + (position->lane) *  segment_length) * BLOCK_SIZE;
+			if(position->pass==0)//first pass => not the first slice
+				ref_positions = (position->slice)*segment_length - ((i==0)?1:0);
+			else 
+				ref_positions = (SYNC_POINTS-1)*segment_length - ((i==0)?1:0);
 		}
+		//Distance quadratic
+		uint64_t index = (phi&0xFFFFFF);
+		index = index*index >> 24;
+		index = ref_positions-1-((ref_positions-1)*index >>24);
+	
+		//Computing offset
+		if(position->pass==0)
+			start_position = 0;
+		else start_position = (position->slice+1)*segment_length;
+		index = (start_position + index) % (SYNC_POINTS*segment_length); //absolute position
+		uint32_t ref_slice = index / segment_length;
+		uint32_t ref_index = index % segment_length;
+		addresses[i] = (ref_index + (ref_lane + ref_slice*info->lanes) *segment_length)*BLOCK_SIZE;
+		/*END-NEW*/
 	}
 }
 
@@ -383,7 +374,7 @@ void FillMemory(const scheme_info_t* info)//Main loop: filling memory <t_cost> t
 }
 
 
-int Argon2iOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
+int Argon2i(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
 {
 	if (outlen>MAX_OUTLEN)
@@ -533,5 +524,5 @@ int Argon2iOpt(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msgle
 int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
 	 unsigned int t_cost, unsigned int m_cost)
  {
-	return Argon2iOpt((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
+	return Argon2i((uint8_t*)out, (uint32_t)outlen, (const uint8_t*)in, (uint32_t)inlen, (const uint8_t*)salt, (uint32_t)saltlen, NULL, 0, NULL, 0, (uint32_t)t_cost, (uint32_t)m_cost, 1);
  }

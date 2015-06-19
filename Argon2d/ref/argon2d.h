@@ -1,12 +1,12 @@
-#include <stdlib.h> // ADDED for size_t
-#include <stdint.h> // ADDED for unit32_t
+#ifndef _ARGON2_
+#define _ARGON2_
 
 #define MIN_LANES  1
 #define SYNC_POINTS 4
 #define MAX_OUTLEN 0xFFFFFFFF
 #define MIN_OUTLEN 4
 #define MIN_MEMORY 1
-#define MAX_MEMORY 0xFFFFFFFF
+#define MAX_MEMORY 0xFFFFFF
 #define MIN_TIME 1
 #define MIN_MSG 0
 #define MAX_MSG 0xFFFFFFFF
@@ -43,5 +43,7 @@ struct block{
 extern "C" int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
 	unsigned int t_cost, unsigned int m_cost);
 
-extern int Argon2dRef(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
+extern int Argon2d(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes);
+
+#endif
