@@ -1,5 +1,6 @@
-
-#define KAT
+#ifndef _ARGON2_
+#define _ARGON2_
+//#define KAT
 //#define KAT_INTERNAL
 
 #define MIN_LANES  1
@@ -57,3 +58,5 @@ extern "C" int PHS(void *out, size_t outlen, const void *in, size_t inlen, const
 
 extern int Argon2d(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes);
+
+#endif
