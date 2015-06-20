@@ -1,7 +1,7 @@
 #ifndef _ARGON2_
 #define _ARGON2_
 
-#define KAT
+//#define KAT
 //#define KAT_INTERNAL
 
 #define MIN_LANES  1
