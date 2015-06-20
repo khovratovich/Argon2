@@ -17,6 +17,8 @@ using namespace std;
 #endif
 #include "blake2.h"
 
+#define _MEASURE
+
 void GenKat()
 {
 	unsigned char out[128];
