@@ -1,7 +1,7 @@
 #ifndef _ARGON2_
 #define _ARGON2_
 
-#define KAT
+//#define KAT
 //#define KAT_INTERNAL
 #define KAT_FILENAME "kat-argon2i-ref.log"
 
