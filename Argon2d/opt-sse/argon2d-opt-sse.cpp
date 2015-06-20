@@ -331,8 +331,8 @@ void FillMemory(scheme_info_t *info)//Main loop: filling memory <t_cost> times
 				positions[t].pass = p;
 				positions[t].slice = s;
 				positions[t].lane = t;
-				//Threads.push_back(thread(FillSegment,info,positions[t]));
-				FillSegment(info,positions[t]);
+				Threads.push_back(thread(FillSegment,info,positions[t]));
+				//FillSegment(info,positions[t]);
 		
 #ifdef PRINT_THREAD
 				sleep(5);
