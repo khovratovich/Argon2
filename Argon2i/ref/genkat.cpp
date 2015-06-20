@@ -117,7 +117,13 @@ void Benchmark()  //Benchmarks Argon with salt length 16, password length 128, t
 			clock_t finish = clock();
 			d2 = (i3 - i2) / (m_cost);
 			float mcycles = (float)(i3 - i2) / (1 << 20);
+#ifdef _ARGON2D_
 			printf("Argon2d %d pass(es)  %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles ", t_cost, m_cost >> 10, thread_n, (float)d2 / 1000, mcycles);
+#endif
+#ifdef _ARGON2I_
+			printf("Argon2i %d pass(es)  %d Mbytes %d threads:  %2.2f cpb %2.2f Mcycles ", t_cost, m_cost >> 10, thread_n, (float)d2 / 1000, mcycles);
+#endif
+			
 			float run_time = ((float)finish - start) / (CLOCKS_PER_SEC);
 			printf("%2.4f seconds\n\n", run_time);
 #endif
