@@ -402,7 +402,6 @@ int Argon2d(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, 
 	/*2. Filling memory */
 	FillMemory(state, t_cost, m_cost, lanes);
 	
-
 	/*3. Finalization*/
 	Finalize(state,out,outlen,m_cost,lanes);
 	return 0;
