@@ -236,28 +236,30 @@ extern "C" int PHS(void *out, size_t outlen, const void *in, size_t inlen, const
         unsigned int t_cost, unsigned int m_cost);
 
 /*
- * Argon2d instance
+  * **************Argon2d: Version of Argon2 that picks memory blocks depending on the password and salt. Only for side-channel-free environment!!***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
 extern int Argon2d(Argon2_Context* context);
 
 /*
- * Argon2i instance
+ *  * **************Argon2i: Version of Argon2 that picks memory blocks independing on the password and salt. Good for side-channels,
+******************* but worse w.r.t. tradeoff attacks if
+ *******************only one pass is used***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
 extern int Argon2i(Argon2_Context* context);
 
 /*
- * Argon2di instance
+ *   * **************Argon2di: Reserved name***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
 extern int Argon2di(Argon2_Context* context);
 
 /*
-* Argon2ds instance
+*   * **************Argon2ds: Argon2d hardened against GPU attacks, 20% slower***************
 * @param  context  Pointer to current Argon2 context
 * @return  Zero if successful, a non zero error code otherwise
 */
@@ -265,7 +267,8 @@ extern int Argon2ds(Argon2_Context* context);
 
 
 /*
- * Argon2id instance
+ *   * **************Argon2id: First half-pass over memory is password-independent, the rest are password-dependent
+ ********************OK against side channels: they reduce to 1/2-pass Argon2i***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */

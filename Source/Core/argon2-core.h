@@ -34,11 +34,11 @@ const uint32_t PREHASH_SEED_LENGTH = PREHASH_DIGEST_LENGTH + 8;
 
 /* Argon2 primitive type */
 enum Argon2_type {
-    Argon2_d,
-    Argon2_i,
-    Argon2_di,
-    Argon2_id,
-    Argon2_ds,
+    Argon2_d=0,
+    Argon2_i=1,
+    Argon2_di=2,
+    Argon2_id=3,
+    Argon2_ds=4
 };
 
 /*****SM-related constants******/

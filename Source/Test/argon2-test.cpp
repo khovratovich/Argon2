@@ -125,7 +125,7 @@ void Benchmark() {
         for (uint32_t thread_n : thread_test) {
 
 #ifdef _MEASURE
-            uint64_t start_cycles, stop_cycles, stop_cycles_i, stop_cycles_di, stop_cycles_ds, delta;
+            uint64_t start_cycles, stop_cycles, stop_cycles_i, stop_cycles_di, stop_cycles_ds;
             uint32_t ui1, ui2, ui3, ui4, ui5;
 
             clock_t start_time = clock();
