@@ -303,7 +303,7 @@ void VerifyTest(bool modify = false) {
         hash[0]++;
     }
 
-    if (Verify(&context, (const char *) hash)) {
+    if (VerifyD(&context, (const char *) hash)) {
         printf("Password is correct!\n");
     } else {
         printf("Password is wrong!\n");
