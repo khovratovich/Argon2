@@ -1,0 +1,192 @@
+=======================================
+Iterations: 3, Memory: 8 KBytes, Parallelism: 1 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 84 20 b8 7c 4a 23 7f 9c 80 4a ab 06 bb b8 a0 c0 5a 56 9f 63 6f 24 57 d8 a0 c2 6f f9 e4 3e 50 a5 f5 af c5 43 9d 19 b4 fd a9 a7 40 3a e2 c7 48 f9 33 b3 d4 f3 f7 0e b8 88 a6 3d e2 8c 81 d3 2b 14 
+Tag: af 7c d5 97 99 aa 70 5e 
+=======================================
+Iterations: 3, Memory: 16 KBytes, Parallelism: 2 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 82 a4 8c cc ab ee 36 69 3e c8 a7 4b 0b 6e 9f 72 af c9 d5 38 ce 9a f5 0f ce ba 20 02 56 19 cb 7f b0 5f b0 52 5c 3f 42 74 29 82 8f bd 07 11 64 af e5 3c 34 16 2d aa 81 a2 28 2d d1 5c 76 8a 82 4d 
+Tag: bb 58 38 b3 3f 58 01 7a 
+=======================================
+Iterations: 3, Memory: 24 KBytes, Parallelism: 3 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 91 6d 55 f2 88 b8 18 9e b3 88 3d df 05 76 0f e7 9f 4b 02 84 ad 28 b7 54 39 c5 24 e5 8b 55 21 b9 51 68 15 57 70 e8 63 11 76 25 fe 40 32 da 9c 3c 59 9e 58 de a9 c7 5d b6 6f 98 ab fa 52 6f 0b e3 
+Tag: 7f 14 de b7 d1 b1 0c 8a 
+=======================================
+Iterations: 3, Memory: 32 KBytes, Parallelism: 4 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 1a 9f 4a 49 f8 8e bb e3 00 c1 05 a1 ea 7c 4a 9e da d9 eb 88 f0 59 c0 37 42 51 8d 3a 4a a5 d5 c1 2b 7c 2c 24 9b 93 0f d1 60 18 df d9 d3 5a 6a 18 6d cb 82 1e 92 8e c4 5b 01 29 4d a7 06 9a 83 aa 
+Tag: 04 32 65 40 1f cf 66 48 
+=======================================
+Iterations: 3, Memory: 40 KBytes, Parallelism: 5 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 2f b8 1a ab 7c a7 78 c7 20 f9 b3 ca 4a 8c fb 52 fa 97 43 20 cc 9d 92 b4 73 aa 98 26 71 6b 15 7c f5 6c d6 a9 4b 11 54 ad 3a b7 39 09 31 5f ad d9 a8 19 2e 9d dd df a2 21 b3 44 7d f9 60 f7 7b 12 
+Tag: cd 9b fb a4 0c d9 93 98 
+=======================================
+Iterations: 3, Memory: 48 KBytes, Parallelism: 6 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: c3 7c 2a 61 c1 7e ad c9 ae 1c d7 36 66 f0 be 0e 15 b4 65 72 48 df 29 63 67 d8 40 38 cd 06 bf 69 de da cd bf af 7c 5a 5c 7c 13 ec 3b 3e 5f 84 60 11 4e a8 56 2e 29 3e 5a 7b 3a 9b 49 14 36 ee 4f 
+Tag: 1f e6 01 7f 44 3e 94 af 
+=======================================
+Iterations: 3, Memory: 56 KBytes, Parallelism: 7 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: c9 db 9b c1 1d 5b 1b e6 57 5f 02 9d bc 00 e5 79 dd 2f 42 d3 7f 04 d5 9c 46 48 0f 7e b3 7c 97 3e 9c 6c 1d e4 40 d2 81 30 af 53 22 3f cc 92 a0 aa 81 cf fa 32 f6 60 15 72 6b ff 3a fd 17 4a bb d3 
+Tag: 83 23 c2 09 2b d6 43 58 
+=======================================
+Iterations: 3, Memory: 64 KBytes, Parallelism: 8 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 92 cd 64 50 88 32 95 5a 74 2c 00 9d b9 bb f0 5a 6d 16 02 ea b3 0c 5e 28 59 b0 dc d2 89 df 42 96 46 09 91 45 02 13 01 db ae c7 54 17 0d ee 68 8f 6e f9 cd e6 7a a4 e1 d6 ba 7a 9b d9 97 bf 71 14 
+Tag: 64 6a 79 6f 1a 41 59 d2 
+=======================================
+Iterations: 3, Memory: 8 KBytes, Parallelism: 1 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 84 20 b8 7c 4a 23 7f 9c 80 4a ab 06 bb b8 a0 c0 5a 56 9f 63 6f 24 57 d8 a0 c2 6f f9 e4 3e 50 a5 f5 af c5 43 9d 19 b4 fd a9 a7 40 3a e2 c7 48 f9 33 b3 d4 f3 f7 0e b8 88 a6 3d e2 8c 81 d3 2b 14 
+Tag: af 7c d5 97 99 aa 70 5e 
+=======================================
+Iterations: 3, Memory: 16 KBytes, Parallelism: 2 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 82 a4 8c cc ab ee 36 69 3e c8 a7 4b 0b 6e 9f 72 af c9 d5 38 ce 9a f5 0f ce ba 20 02 56 19 cb 7f b0 5f b0 52 5c 3f 42 74 29 82 8f bd 07 11 64 af e5 3c 34 16 2d aa 81 a2 28 2d d1 5c 76 8a 82 4d 
+Tag: bb 58 38 b3 3f 58 01 7a 
+=======================================
+Iterations: 3, Memory: 24 KBytes, Parallelism: 3 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 91 6d 55 f2 88 b8 18 9e b3 88 3d df 05 76 0f e7 9f 4b 02 84 ad 28 b7 54 39 c5 24 e5 8b 55 21 b9 51 68 15 57 70 e8 63 11 76 25 fe 40 32 da 9c 3c 59 9e 58 de a9 c7 5d b6 6f 98 ab fa 52 6f 0b e3 
+Tag: 7f 14 de b7 d1 b1 0c 8a 
+=======================================
+Iterations: 3, Memory: 32 KBytes, Parallelism: 4 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 1a 9f 4a 49 f8 8e bb e3 00 c1 05 a1 ea 7c 4a 9e da d9 eb 88 f0 59 c0 37 42 51 8d 3a 4a a5 d5 c1 2b 7c 2c 24 9b 93 0f d1 60 18 df d9 d3 5a 6a 18 6d cb 82 1e 92 8e c4 5b 01 29 4d a7 06 9a 83 aa 
+Tag: 04 32 65 40 1f cf 66 48 
+=======================================
+Iterations: 3, Memory: 40 KBytes, Parallelism: 5 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 2f b8 1a ab 7c a7 78 c7 20 f9 b3 ca 4a 8c fb 52 fa 97 43 20 cc 9d 92 b4 73 aa 98 26 71 6b 15 7c f5 6c d6 a9 4b 11 54 ad 3a b7 39 09 31 5f ad d9 a8 19 2e 9d dd df a2 21 b3 44 7d f9 60 f7 7b 12 
+Tag: cd 9b fb a4 0c d9 93 98 
+=======================================
+Iterations: 3, Memory: 48 KBytes, Parallelism: 6 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: c3 7c 2a 61 c1 7e ad c9 ae 1c d7 36 66 f0 be 0e 15 b4 65 72 48 df 29 63 67 d8 40 38 cd 06 bf 69 de da cd bf af 7c 5a 5c 7c 13 ec 3b 3e 5f 84 60 11 4e a8 56 2e 29 3e 5a 7b 3a 9b 49 14 36 ee 4f 
+Tag: 1f e6 01 7f 44 3e 94 af 
+=======================================
+Iterations: 3, Memory: 56 KBytes, Parallelism: 7 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: c9 db 9b c1 1d 5b 1b e6 57 5f 02 9d bc 00 e5 79 dd 2f 42 d3 7f 04 d5 9c 46 48 0f 7e b3 7c 97 3e 9c 6c 1d e4 40 d2 81 30 af 53 22 3f cc 92 a0 aa 81 cf fa 32 f6 60 15 72 6b ff 3a fd 17 4a bb d3 
+Tag: 83 23 c2 09 2b d6 43 58 
+=======================================
+Iterations: 3, Memory: 64 KBytes, Parallelism: 8 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 92 cd 64 50 88 32 95 5a 74 2c 00 9d b9 bb f0 5a 6d 16 02 ea b3 0c 5e 28 59 b0 dc d2 89 df 42 96 46 09 91 45 02 13 01 db ae c7 54 17 0d ee 68 8f 6e f9 cd e6 7a a4 e1 d6 ba 7a 9b d9 97 bf 71 14 
+Tag: 64 6a 79 6f 1a 41 59 d2 
+=======================================
+Iterations: 3, Memory: 100 KBytes, Parallelism: 1 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 01 42 6a 47 31 89 aa e5 4f 3f b9 c2 a0 79 01 f9 ab 80 9e 0d 9b 71 57 c0 1a cf 99 42 8a 5c 8b c7 04 f7 5c a3 16 1d 8d 42 c7 0d db c5 0c a4 0d 8b ae f8 81 1e ea 8f 7c 5a 5b 8e 2b 9d 1d 95 53 0e 
+Tag: 0d bb 53 62 4f a7 0c 04 
+=======================================
+Iterations: 3, Memory: 96 KBytes, Parallelism: 2 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 42 bf 3c 3e 35 91 30 28 e0 0e c3 06 76 cc 46 21 e0 b0 3f 10 cf 35 da 4e 62 50 2c 86 38 6c 0e ff a8 51 61 85 8e ed cd 7f b2 60 1b 7e eb 35 b2 8a 2d 47 e9 21 a1 7e ae c8 40 5a 74 00 ff f8 3e ae 
+Tag: 26 96 a2 56 27 b2 dd ed 
+=======================================
+Iterations: 3, Memory: 96 KBytes, Parallelism: 3 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 9f a2 a4 f6 00 c2 c4 a7 f5 9d 35 39 f0 fa c3 a2 bb b4 c9 d0 3a d9 ae e6 ef e9 39 e5 ba 41 9f 33 09 8d 7d f0 e5 2f e0 54 de 07 c5 4e 00 20 02 30 da 75 1f f7 78 25 5c d6 e3 89 b5 2f db f6 f9 0b 
+Tag: d4 b7 79 0f 5f 1c c7 76 
+=======================================
+Iterations: 3, Memory: 96 KBytes, Parallelism: 4 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: fc 7d f4 61 45 54 b7 b1 b1 fc ad 84 73 1e 70 f2 9a 94 cc f6 6d bc 15 71 0a d9 93 3f 93 17 22 8d 31 5e 75 99 20 24 27 5f da e5 09 62 8a d7 ec 47 d4 95 39 3c 1c 72 20 a6 2f 38 dc db a1 a8 53 33 
+Tag: ac 73 a4 2e 5c 60 39 b3 
+=======================================
+Iterations: 3, Memory: 100 KBytes, Parallelism: 5 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 7b 93 7c 7f f0 5e 99 cd d7 ce a0 a2 9a 65 c8 0c 0f a7 32 3a 11 1b f9 35 c6 13 aa a9 60 38 52 da d6 e2 c2 63 d7 fa eb ff 17 f6 15 57 a2 cf 4e ab cf 3e 6a ff aa ef 3d e2 6a b8 cf e8 b2 2a 3b 34 
+Tag: 17 5c 81 91 51 ed 14 f8 
+=======================================
+Iterations: 3, Memory: 96 KBytes, Parallelism: 6 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 16 22 3c d1 94 6a db 44 e3 96 ec 8e f5 18 41 34 f7 a3 03 7a 5b 8e 78 ff 5e f8 54 9b 2e 23 6c a5 c3 1d 82 7c f7 29 5e 54 e0 62 df b1 cc 1c 3a d9 09 23 41 fc 0e 77 99 69 3b 57 40 bc 15 b6 fd ad 
+Tag: 32 fa f3 d5 52 c9 e5 c3 
+=======================================
+Iterations: 3, Memory: 84 KBytes, Parallelism: 7 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 44 95 31 d7 0a fc 1d 7a 74 49 47 cc 61 56 c8 0d 8c 4f a1 fb 3e b5 1d ca 8f 32 db 2f d3 cd c7 b8 05 8c c0 c2 d9 f2 fa 44 63 2a 29 08 0c e1 a0 09 a5 76 56 c0 5e 96 e4 14 4a 28 21 b5 6b f2 8a df 
+Tag: 28 63 4f 5a fb 4e ff 22 
+=======================================
+Iterations: 3, Memory: 96 KBytes, Parallelism: 8 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 83 94 51 e5 78 1c d2 e2 e1 33 81 c8 0e c8 38 1d 79 05 6d aa 51 e3 36 93 69 2e 42 d7 f4 73 fc 2e a5 b3 b2 15 a7 b9 4c f2 99 43 da ac b5 cb 00 f2 2e 7b cc 05 02 64 4b 04 e8 34 34 8f 21 2b db 4e 
+Tag: 55 03 fe da af 37 9d 32 
+=======================================
+Iterations: 3, Memory: 1000 KBytes, Parallelism: 1 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 94 cd 95 12 b4 e8 15 21 13 3c fa 1e 81 d4 30 22 9c 47 4c 3e ff 4a 6b 36 89 49 62 cd 70 59 9e 8a f7 52 19 c0 67 0b b8 94 ba 5e 6c 76 6f 32 56 a0 e9 77 58 2e 46 e0 7c a6 0b 8a c8 b3 53 fd bd b8 
+Tag: 6a b3 7a c3 50 9a 4d 98 
+=======================================
+Iterations: 3, Memory: 1000 KBytes, Parallelism: 2 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 18 23 8b a4 84 96 68 4d c4 4a 3e 13 eb 2b 29 ce 01 3b c2 67 11 be 4e 0d 7c eb 01 50 75 8d 6d 68 73 7e e6 8b 4d 1f b7 ed 77 3a c5 7b c5 e7 72 7b 06 8b 15 10 95 50 16 df 5f cd 5f 40 95 8c 86 19 
+Tag: c0 fc a1 96 e7 03 f0 e8 
+=======================================
+Iterations: 3, Memory: 996 KBytes, Parallelism: 3 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 3d 0b ea 43 f2 9e c2 6c 58 ae 76 1a 53 26 a7 9f f3 40 12 0f 1c 0c f7 c0 10 cf b8 2e cb 63 74 90 e6 60 a6 6a cf 20 02 0f ec 59 3e 4b 9a 8a a3 48 48 e2 2b 94 e1 ae 1c f7 8f f1 96 8d 0e a0 a0 34 
+Tag: 9b 06 0d 65 e4 fd 0b 48 
+=======================================
+Iterations: 3, Memory: 992 KBytes, Parallelism: 4 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 41 0b c1 ac fe b3 61 fa 00 4a dc 9e 3f 74 6b 26 d1 3a 2b 2f 50 1a 5b 92 9d 76 b2 5f 49 79 2c 96 ea 41 f0 6d 6d f3 7d 12 05 74 be 20 8c 0e f2 f7 7c 65 c2 c8 39 fe b9 7b ec 52 63 47 fc 7a c9 d4 
+Tag: 9a 33 30 0d 6e ba 9e 92 
+=======================================
+Iterations: 3, Memory: 1000 KBytes, Parallelism: 5 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: a9 fa d9 98 0e 3c 5c bf 62 0e 19 3c c0 b7 db fe 55 42 73 a0 4d 17 b8 41 7c fb ca 10 32 26 8d f5 ef 53 5a 83 96 aa 3b 5d 3f 0e 2a 6d 71 52 1e 4f e9 66 d8 d8 f9 c0 5a f5 04 82 d7 27 bc 02 3c d7 
+Tag: 36 c5 e0 f6 f3 be a5 0b 
+=======================================
+Iterations: 3, Memory: 984 KBytes, Parallelism: 6 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: cb 66 d8 47 b8 e5 f4 5e 49 0f c3 f5 cb 2a 7a 5c 8a fd 52 9f 41 49 7d a0 f7 d1 f5 5e 02 e8 d7 2c 7f d4 38 92 1f 41 12 1c 12 43 ab 7b aa 9c ce a3 c2 44 52 5b 77 72 85 b1 2e 5e 00 87 84 1b fa 60 
+Tag: 23 2f dd b2 2a 60 39 0c 
+=======================================
+Iterations: 3, Memory: 980 KBytes, Parallelism: 7 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 6a 9d 09 6e ad d8 5e a0 31 0b 8c 62 92 c6 45 3e 41 6d d9 48 0d 54 c5 32 91 df 29 ac 2a ae 21 82 f2 27 c8 4e 88 23 74 16 5d ed 39 0e ad 55 3c 2c 37 4a 64 ac 55 9d ba 2f e9 3a f3 fa d6 c5 a4 2d 
+Tag: 19 cf 93 19 f9 d4 f3 c6 
+=======================================
+Iterations: 3, Memory: 992 KBytes, Parallelism: 8 lanes, Tag length: 8 bytes
+Message: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+Nonce: 01 01 01 01 01 01 01 01 
+Input Hash: 90 84 79 1b 44 b7 ed fa 73 e8 01 42 b6 9e 04 47 2c 57 cf 32 3e 21 6d 57 15 ea e4 fc 19 f4 fb e2 2a 98 6e 3e bb 17 ab 57 8d e2 3f 14 f6 57 e3 78 1a 74 19 79 82 ca 0e ad aa 34 46 70 3a 9f 74 e7 
+Tag: 2a 19 4e ae 19 56 41 4e 
