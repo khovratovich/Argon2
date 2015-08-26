@@ -1,7 +1,10 @@
 ﻿================================================================================
 	Argon2 source code package
 ================================================================================
-
+Warning
+=======
+Argon2 is the basis for the eventual winner of Password Hashing Competition. 
+The final winner may be different from the current version (1.2.1).
 
 About
 =====
