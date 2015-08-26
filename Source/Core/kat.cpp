@@ -46,20 +46,44 @@ void InitialKat(const uint8_t* blockhash, const Argon2_Context* context, Argon2_
                 context->t_cost, context->m_cost, context->lanes, context->outlen);
 
 
-        fprintf(fp, "Message: ");
-        for (unsigned i = 0; i < context->pwdlen; ++i) {
-            fprintf(fp, "%2.2x ", ((unsigned char*) context->pwd)[i]);
+        fprintf(fp, "Password[%d]: ", context->pwdlen);
+        if (context->clear_password) {
+            fprintf(fp, "CLEARED\n");
+        } else {
+            for (unsigned i = 0; i < context->pwdlen; ++i) {
+                fprintf(fp, "%2.2x ", ((unsigned char*) context->pwd)[i]);
+            }
+            fprintf(fp, "\n");
         }
-        fprintf(fp, "\n");
 
-        fprintf(fp, "Nonce: ");
+
+        fprintf(fp, "Salt[%d]: ", context->saltlen);
         for (unsigned i = 0; i < context->saltlen; ++i) {
             fprintf(fp, "%2.2x ", ((unsigned char*) context->salt)[i]);
         }
         fprintf(fp, "\n");
 
-        fprintf(fp, "Input Hash+extra: ");
-        for (unsigned i = 0; i < PREHASH_SEED_LENGTH; ++i) {
+        fprintf(fp, "Secret[%d]: ", context->secretlen);
+
+        if (context->clear_secret) {
+            fprintf(fp, "CLEARED\n");
+        } else {
+            for (unsigned i = 0; i < context->secretlen; ++i) {
+                fprintf(fp, "%2.2x ", ((unsigned char*) context->secret)[i]);
+            }
+            fprintf(fp, "\n");
+        }
+
+        fprintf(fp, "Associated data[%d]: ", context->adlen);
+        for (unsigned i = 0; i < context->adlen; ++i) {
+            fprintf(fp, "%2.2x ", ((unsigned char*) context->ad)[i]);
+        }
+        fprintf(fp, "\n");
+
+
+
+        fprintf(fp, "Pre-hashing digest: ");
+        for (unsigned i = 0; i < PREHASH_DIGEST_LENGTH; ++i) {
             fprintf(fp, "%2.2x ", ((unsigned char*) blockhash)[i]);
         }
         fprintf(fp, "\n");

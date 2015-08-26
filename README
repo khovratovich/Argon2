@@ -27,6 +27,10 @@ Project structure
 =================
 .
 ├── Build
+│   ├── argon2
+│   ├── argon2-lib-test
+│   ├── argon2-tv
+│   └── libargon2.so
 ├── LaTeX
 │   ├── argon2-spec.tex
 │   ├── pics
@@ -43,30 +47,36 @@ Project structure
 ├── LICENSE
 ├── Makefile
 ├── README
-└── Source
-    ├── Argon2
-    │   ├── argon2.cpp
-    │   └── argon2.h
-    ├── Blake2
-    │   ├── blake2b.cpp
-    │   ├── blake2b-load-sse2.h
-    │   ├── blake2b-load-sse41.h
-    │   ├── blake2b-ref.cpp
-    │   ├── blake2b-round.h
-    │   ├── blake2-config.h
-    │   ├── blake2.h
-    │   ├── blake2-impl.h
-    │   ├── blake2-round.h
-    │   ├── blake2-round-mka.h
-    │   └── blake-round-mka.h
-    ├── Core
-    │   ├── argon2-core.cpp
-    │   ├── argon2-core.h
-    │   ├── argon2-opt-core.cpp
-    │   ├── argon2-ref-core.cpp
-    │   ├── kat.cpp
-    │   └── kat.h
-    └── Test
-        └── argon2-test.cpp
+├── Source
+│   ├── Argon2
+│   │   ├── argon2.cpp
+│   │   └── argon2.h
+│   ├── Blake2
+│   │   ├── blake2b.cpp
+│   │   ├── blake2b-load-sse2.h
+│   │   ├── blake2b-load-sse41.h
+│   │   ├── blake2b-ref.cpp
+│   │   ├── blake2b-round.h
+│   │   ├── blake2-config.h
+│   │   ├── blake2.h
+│   │   ├── blake2-impl.h
+│   │   ├── blake2-round.h
+│   │   ├── blake2-round-mka.h
+│   │   └── blake-round-mka.h
+│   ├── Core
+│   │   ├── argon2-core.cpp
+│   │   ├── argon2-core.h
+│   │   ├── argon2-opt-core.cpp
+│   │   ├── argon2-ref-core.cpp
+│   │   ├── kat.cpp
+│   │   └── kat.h
+│   └── Test
+│       └── argon2-test.cpp
+└── TestVectors
+    ├── Argon2di.txt
+    ├── Argon2ds.txt
+    ├── Argon2d.txt
+    ├── Argon2id.txt
+    └── Argon2i.txt
 
-8 directories, 34 files
+9 directories, 43 files

@@ -12,8 +12,9 @@
 #include <stdint.h>
 #include <random>
 #include <cstring>
+#include <algorithm>
 #include <vector>
-
+#include <string>
 
 #include "time.h"
 #include "argon2.h"
@@ -21,14 +22,6 @@
 
 /* Enable timing measurements */
 #define _MEASURE
-
-enum Argon2_Type {
-    Type_Argon2d = 0,
-    Type_Argon2di = 1,
-    Type_Argon2ds = 2,
-    Type_Argon2i = 3,
-    Type_Argon2id = 4,
-};
 
 /*
  * Custom allocate memory
@@ -126,10 +119,10 @@ void Benchmark() {
 
     memset(zero_array, 0, inlen);
     memset(one_array, 1, 256);
-	std::vector<uint32_t> thread_test = { 1, 2, 4, 6, 8, 16 };
+    std::vector<uint32_t> thread_test = {1, 2, 4, 6, 8, 16};
 
     for (uint32_t m_cost = (uint32_t) 1 << 3; m_cost <= (uint32_t) 1 << 19; m_cost *= 2) {
-        for (uint32_t thread_n: thread_test) {
+        for (uint32_t thread_n : thread_test) {
 
 #ifdef _MEASURE
             uint64_t start_cycles, stop_cycles, stop_cycles_i, stop_cycles_di, stop_cycles_ds, delta;
@@ -209,17 +202,32 @@ void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost
 
 }
 
-void GenerateTestVectors(Argon2_Type type) {
-    unsigned char out[128];
-    unsigned char zero_array[256];
-    unsigned char one_array[256];
+void GenerateTestVectors(const std::string &type) {
+    const unsigned out_length = 32;
+    const unsigned pwd_length = 32;
+    const unsigned salt_length = 16;
+    const unsigned secret_length = 8;
+    const unsigned ad_length = 12;
+    bool clear_memory = false;
+    bool clear_secret = false;
+    bool clear_password = false;
+    unsigned char out[out_length];
+    unsigned char pwd[pwd_length];
+    unsigned char salt[salt_length];
+    unsigned char secret[secret_length];
+    unsigned char ad[ad_length];
+    const AllocateMemoryCallback myown_allocator = NULL;
+    const FreeMemoryCallback myown_deallocator = NULL;
 
     unsigned t_cost = 3;
     unsigned m_cost = 16;
-    unsigned thread_n = 4;
+    unsigned lanes = 4;
 
-    memset(zero_array, 0, 256);
-    memset(one_array, 1, 256);
+
+    memset(pwd, 1, pwd_length);
+    memset(salt, 2, salt_length);
+    memset(secret, 3, secret_length);
+    memset(ad, 4, ad_length);
 
 #if defined(KAT) || defined(KAT_INTERNAL)
     printf("Generate test vectors in file: \"%s\".\n", KAT_FILENAME);
@@ -227,32 +235,38 @@ void GenerateTestVectors(Argon2_Type type) {
     printf("Enable KAT to generate the test vectors.\n");
 #endif
 
-    Argon2_Context context(out, 128, zero_array, 256, one_array, 256, NULL, 0, NULL, 0, t_cost, m_cost, thread_n);
+    Argon2_Context context(out, out_length, pwd, pwd_length, salt, salt_length,
+            secret, secret_length, ad, ad_length, t_cost, m_cost, lanes,
+            myown_allocator, myown_deallocator,
+            clear_password, clear_secret, clear_memory);
 
-    switch (type) {
-        case Type_Argon2d:
-            printf("Test Argon2d\n");
-            Argon2d(&context);
-            break;
-        case Type_Argon2i:
-            printf("Test Argon2i\n");
-            Argon2i(&context);
-            break;
-        case Type_Argon2di:
-            printf("Test Argon2di\n");
-            Argon2i(&context);
-            break;
-        case Type_Argon2ds:
-            printf("Test Argon2ds\n");
-            Argon2ds(&context);
-            break;
-        case Type_Argon2id:
-            printf("Test Argon2id\n");
-            Argon2id(&context);
-            break;
+    if (type==std::string("Argon2d")) {
+        printf("Test Argon2d\n");
+        Argon2d(&context);
+        return;
+    }
+    if (type==std::string("Argon2i")) {
+        printf("Test Argon2i\n");
+        Argon2i(&context);
+        return;
+    }
+    if (type==std::string("Argon2di")) {
+        printf("Test Argon2di\n");
+        Argon2i(&context);
+        return;
+    }
+    if (type==std::string("Argon2ds")) {
+        printf("Test Argon2ds\n");
+        Argon2ds(&context);
+        return;
+    }
+    if (type==std::string("Argon2id")) {
+        printf("Test Argon2id\n");
+        Argon2id(&context);
+        return;
     }
 
-    printf("Finished!\n");
+    printf("Wrong Argon2 type!\n");
 }
 
 void VerifyTest(bool modify = false) {
@@ -282,7 +296,7 @@ void VerifyTest(bool modify = false) {
             clear_input, clear_input, clear_memory);
     Argon2d(&context);
 
-    memcpy(hash, context.out, context.outlen);
+    memcpy(hash, context.out, std::min(context.outlen,out_length));
 
     if (modify) {
         // Change the hash value
@@ -297,6 +311,8 @@ void VerifyTest(bool modify = false) {
 }
 
 int main(int argc, char* argv[]) {
+   // const unsigned int argon2_type_length = 10;
+
     unsigned char out[32];
 
     uint32_t outlen = 32;
@@ -307,7 +323,8 @@ int main(int argc, char* argv[]) {
     uint32_t s_len = 16;
 
     bool generate_test_vectors = false;
-    Argon2_Type type = Type_Argon2d;
+    //char type[argon2_type_length] = "Argon2d";
+    std::string type;
 
 #ifdef KAT
     remove(KAT_FILENAME);
@@ -330,7 +347,7 @@ int main(int argc, char* argv[]) {
             printf("\t -pwdlen < Password : length>\n");
             printf("\t -saltlen < Salt : Length>\n");
             printf("\t -threads < Number of threads : % d.. % d>\n", MIN_LANES, MAX_LANES);
-            printf("\t -type <0 - Argon2d; 1 - Argon2di; 2 - Argon2ds; 3 - Argon2i; 4 - Argon2id >\n");
+            printf("\t -type <Argon2d; Argon2di; Argon2ds; Argon2i; Argon2id >\n");
             printf("\t -gen-tv\n");
             printf("\t -verify\n");
             printf("\t -benchmark\n");
@@ -390,7 +407,10 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[i], "-type") == 0) {
             if (i < argc - 1) {
                 i++;
-                type = (Argon2_Type) (atoi(argv[i]) % 5);
+              type =std:: string(argv[i]);
+//                      if (argon2_type_length >= strlen(argv[i])) {
+ //                   memcpy(type, argv[i], strlen(argv[i]));
+  //              }
                 continue;
             }
         }
