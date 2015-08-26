@@ -276,7 +276,7 @@ extern int Argon2id(Argon2_Context* context);
  * @param  context  Pointer to current Argon2 context
  * @param  hash  The password hash to verify. The length of the hash is specified by the context outlen member
  */
-bool VerifyD(Argon2_Context* context, const char *hash);
+extern bool VerifyD(Argon2_Context* context, const char *hash);
 
 /*
  * Get the associated error message for given erro code
