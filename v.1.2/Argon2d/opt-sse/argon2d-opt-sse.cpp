@@ -55,7 +55,6 @@ __m128i t0, t1;
 const __m128i r16 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9);
 const __m128i r24 = _mm_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10);
 
-//#define BLOCK_OFFSET(l,s) {}
 
 
 void allocate_memory(uint8_t **memory,uint32_t m_cost)
@@ -75,7 +74,6 @@ void free_memory(uint8_t **memory)
 		_mm_free ((void *) *memory);
 	}
 }
-
 
 
 void ComputeBlock(__m128i *state, uint8_t* ref_block_ptr, uint8_t* next_block_ptr)
@@ -163,19 +161,19 @@ void ComputeBlock(__m128i *state, uint8_t* ref_block_ptr, uint8_t* next_block_pt
 
 void Initialize(scheme_info_t* info, uint8_t* input_hash)
 {
-	uint8_t block_input[BLAKE_INPUT_HASH_SIZE + 8];
+	uint8_t block_input[INPUT_INITIAL_HASH_LENGTH + 8];
 	uint32_t segment_length = (info->mem_size / (SYNC_POINTS*(info->lanes)));
-	memcpy(block_input, input_hash, BLAKE_INPUT_HASH_SIZE);
-	memset(block_input + BLAKE_INPUT_HASH_SIZE, 0, 8);
+	memcpy(block_input, input_hash, INPUT_INITIAL_HASH_LENGTH);
+	memset(block_input + INPUT_INITIAL_HASH_LENGTH, 0, 8);
 	for (uint8_t l = 0; l < info->lanes; ++l)
 	{
-		block_input[BLAKE_INPUT_HASH_SIZE + 4] = l;
-		block_input[BLAKE_INPUT_HASH_SIZE] = 0;
-		blake2b_long(info->state + l * segment_length*BLOCK_SIZE, block_input, BLOCK_SIZE, BLAKE_INPUT_HASH_SIZE + 8);
-		block_input[BLAKE_INPUT_HASH_SIZE] = 1;
-		blake2b_long(info->state + (l * segment_length + 1)*BLOCK_SIZE, block_input, BLOCK_SIZE, BLAKE_INPUT_HASH_SIZE + 8);
+		block_input[INPUT_INITIAL_HASH_LENGTH + 4] = l;
+		block_input[INPUT_INITIAL_HASH_LENGTH] = 0;
+		blake2b_long(info->state + l * segment_length*BLOCK_SIZE, block_input, BLOCK_SIZE, INPUT_INITIAL_HASH_LENGTH + 8);
+		block_input[INPUT_INITIAL_HASH_LENGTH] = 1;
+		blake2b_long(info->state + (l * segment_length + 1)*BLOCK_SIZE, block_input, BLOCK_SIZE, INPUT_INITIAL_HASH_LENGTH + 8);
 	}
-	memset(block_input, 0, BLAKE_INPUT_HASH_SIZE + 8);
+	memset(block_input, 0, INPUT_INITIAL_HASH_LENGTH + 8);
 }
 
 void Finalize(scheme_info_t* info, uint8_t* out, uint32_t outlen)//XORing the last block of each lane, hashing it, making the tag.
@@ -334,9 +332,6 @@ void FillMemory(scheme_info_t *info)//Main loop: filling memory <t_cost> times
 				Threads.push_back(thread(FillSegment,info,positions[t]));
 				//FillSegment(info,positions[t]);
 		
-#ifdef PRINT_THREAD
-				sleep(5);
-#endif
 			}
 
 			for (auto& th : Threads)
@@ -362,85 +357,22 @@ void FillMemory(scheme_info_t *info)//Main loop: filling memory <t_cost> times
 int Argon2d(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, const uint8_t *nonce, uint32_t noncelen, const uint8_t *secret,
 	uint8_t secretlen, const uint8_t *ad, uint32_t adlen, uint32_t t_cost, uint32_t m_cost, uint8_t lanes)
 {
-	if (outlen>MAX_OUTLEN)
-		outlen = MAX_OUTLEN;
-	if (outlen < MIN_OUTLEN)
-		return -1;  //Tag too short
-
-	if (msglen> MAX_MSG)
-		msglen = MAX_MSG;
-	if (msglen < MIN_MSG)
-		return -2; //Password too short
-
-	if (noncelen < MIN_NONCE)
-		return -3; //Salt too short
-	if (noncelen> MAX_NONCE)
-		noncelen = MAX_NONCE;
-
-	if (secretlen> MAX_SECRET)
-		secretlen = MAX_SECRET;
-	if (secretlen < MIN_SECRET)
-		return -4; //Secret too short
-
-	if (adlen> MAX_AD)
-		adlen = MAX_AD;
-	if (adlen < MIN_AD)
-		return -5; //Associated data too short
-
-	//minumum m_cost =8L blocks, where L is the number of lanes
-	if (m_cost < 2 * SYNC_POINTS*lanes)
-		m_cost = 2 * SYNC_POINTS*lanes;
-	if (m_cost>MAX_MEMORY)
-		m_cost = MAX_MEMORY;
-
-	m_cost = (m_cost / (lanes*SYNC_POINTS))*(lanes*SYNC_POINTS); //Ensure that all segments have equal length;
-
-	//minimum t_cost =3
-	if (t_cost<MIN_TIME)
-		t_cost = MIN_TIME;
-
-	if (lanes<MIN_LANES)
-		lanes = MIN_LANES;
-	if (lanes>m_cost / BLOCK_SIZE_KILOBYTE)
-		lanes = m_cost / BLOCK_SIZE_KILOBYTE;
+	/*0. Validate all inputs*/
+	int check_value = ValidateInputs(out, outlen, msg, msglen, nonce, noncelen, secret, secretlen, ad, adlen, t_cost, m_cost, lanes);
+	if (check_value != 0)
+		return check_value;
 
 	unsigned int ui1, ui2; 
-	//struct timeval tv1, tv2;
-
-	
-	//printf("---Begin---\n");
 	uint8_t *memory;
 	
 #ifdef MEASURE
 	uint64_t begin, end;
-	
-//	gettimeofday(&tv1, NULL);
 	begin = __rdtscp(&ui1);
 #endif 
 
 	//Initial hashing
-	uint8_t blockhash[BLAKE_INPUT_HASH_SIZE];//H_0 in the document
-	memset(blockhash, 0, BLAKE_INPUT_HASH_SIZE);
-	uint8_t version = VERSION_NUMBER;
-	blake2b_state BlakeHash;
-	blake2b_init(&BlakeHash, BLAKE_INPUT_HASH_SIZE);
-
-	blake2b_update(&BlakeHash, (const uint8_t*)&lanes, sizeof(lanes));
-	blake2b_update(&BlakeHash, (const uint8_t*)&outlen, sizeof(outlen));
-	blake2b_update(&BlakeHash, (const uint8_t*)&m_cost, sizeof(m_cost));
-	blake2b_update(&BlakeHash, (const uint8_t*)&t_cost, sizeof(t_cost));
-	blake2b_update(&BlakeHash, (const uint8_t*)&version, sizeof(version));
-	blake2b_update(&BlakeHash, (const uint8_t*)&msglen, sizeof(msglen));
-	blake2b_update(&BlakeHash, (const uint8_t*)msg, msglen);
-	blake2b_update(&BlakeHash, (const uint8_t*)&noncelen, sizeof(noncelen));
-	blake2b_update(&BlakeHash, (const uint8_t*)nonce, noncelen);
-	blake2b_update(&BlakeHash, (const uint8_t*)&secretlen, sizeof(secretlen));
-	blake2b_update(&BlakeHash, (const uint8_t*)secret, secretlen);
-	blake2b_update(&BlakeHash, (const uint8_t*)&adlen, sizeof(adlen));
-	blake2b_update(&BlakeHash, (const uint8_t*)ad, adlen);
-
-
-	blake2b_final(&BlakeHash, blockhash, BLAKE_INPUT_HASH_SIZE); //Calculating H0
+	uint8_t blockhash[INPUT_INITIAL_HASH_LENGTH];//H_0 in the document
+	InitialHash(blockhash, outlen, msg, msglen, nonce, noncelen, secret, secretlen, ad, adlen, t_cost, m_cost, lanes); //Hashing all inputs
 #ifdef KAT
 	FILE* fp = fopen(KAT_FILENAME, "a+");
 
@@ -478,31 +410,6 @@ int Argon2d(uint8_t *out, uint32_t outlen, const uint8_t *msg, uint32_t msglen, 
 #ifdef MEASURE
 	end = __rdtscp(&ui2);
 #endif
-	//gettimeofday(&tv2, NULL);
-
-
-	//print_block(&memory[(BLOCKS - 1) * BLOCK_SIZE]);
-	
-/*#ifdef MEASURE	
-	uint64_t cycles = end - begin;
-	//double time = (tv2.tv_sec - tv1.tv_sec) + (tv2.tv_usec - tv1.tv_usec) / USEC_TO_SEC;
-	
-	printf("=== Results - begin === \n");
-	printf("Memory Size (GB): %lf\n", m_cost >> 20);
-	printf("\n");
-	printf("Passes: %d\n", t_cost);
-	printf("Syncs: %d\n", SYNC_POINTS);
-	printf("Threads: %d\n", lanes);
-	printf("\n");
-	printf("Cycles: %" PRIu64 "\n", cycles);
-	printf("Cycles/Byte: %lf\n", (double)(cycles / (m_cost * 1024.0))); 
-	printf("Time (s): %lf\n", time);
-	//printf("Bandwidth (GB/s): %lf\n", (((2 * THREAD_BLOCKS - 1) * THREADS * PASSES * BLOCK_SIZE) / BYTES_TO_GIGABYTES) / time);
-	printf("=== Results - end === \n");
-
-	printf("---End---\n");
-#endif*/
-
 	return 0;
 }
 
