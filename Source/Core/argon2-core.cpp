@@ -176,47 +176,63 @@ int ValidateInputs(const Argon2_Context* context) {
     }
 
     /* Validate password length */
-    if (NULL == context->pwd && 0 != context->pwdlen) {
-        return ARGON2_PWD_PTR_MISMATCH;
+    if (NULL == context->pwd){
+        if(0 != context->pwdlen) {
+            return ARGON2_PWD_PTR_MISMATCH;
+        }
     }
-    if (MIN_PWD_LENGTH > context->pwdlen) {
-        return ARGON2_PWD_TOO_SHORT;
-    }
-    if (MAX_PWD_LENGTH < context->pwdlen) {
-        return ARGON2_PWD_TOO_LONG;
+    else{
+        if (MIN_PWD_LENGTH > context->pwdlen) {
+            return ARGON2_PWD_TOO_SHORT;
+        }
+        if (MAX_PWD_LENGTH < context->pwdlen) {
+            return ARGON2_PWD_TOO_LONG;
+        }
     }
 
     /* Validate salt length */
-    if (NULL == context->salt && 0 != context->saltlen) {
-        return ARGON2_SALT_PTR_MISMATCH;
+    if (NULL == context->salt){
+        if(0 != context->saltlen) {
+            return ARGON2_SALT_PTR_MISMATCH;
+        }
     }
-    if (MIN_SALT_LENGTH > context->saltlen) {
-        return ARGON2_SALT_TOO_SHORT;
-    }
-    if (MAX_SALT_LENGTH < context->saltlen) {
-        return ARGON2_SALT_TOO_LONG;
+    else{
+        if (MIN_SALT_LENGTH > context->saltlen) {
+            return ARGON2_SALT_TOO_SHORT;
+        }
+        if (MAX_SALT_LENGTH < context->saltlen) {
+            return ARGON2_SALT_TOO_LONG;
+        }
     }
 
     /* Validate secret length */
-    if (NULL == context->secret && 0 != context->secretlen) {
-        return ARGON2_SECRET_PTR_MISMATCH;
+    if (NULL == context->secret){
+        if(0 != context->secretlen) {
+            return ARGON2_SECRET_PTR_MISMATCH;
+        }
     }
-    if (MIN_SECRET > context->secretlen) {
-        return ARGON2_SECRET_TOO_SHORT;
-    }
-    if (MAX_SECRET < context->secretlen) {
-        return ARGON2_SECRET_TOO_LONG;
+    else{
+        if (MIN_SECRET > context->secretlen) {
+            return ARGON2_SECRET_TOO_SHORT;
+        }
+        if (MAX_SECRET < context->secretlen) {
+            return ARGON2_SECRET_TOO_LONG;
+        }
     }
 
     /* Validate associated data */
-    if (NULL == context->ad && 0 != context->adlen) {
-        return ARGON2_AD_PTR_MISMATCH;
+    if (NULL == context->ad){
+        if(0 != context->adlen) {
+            return ARGON2_AD_PTR_MISMATCH;
+        }
     }
-    if (MIN_AD_LENGTH > context->adlen) {
-        return ARGON2_AD_TOO_SHORT;
-    }
-    if (MAX_AD_LENGTH < context->adlen) {
-        return ARGON2_AD_TOO_LONG;
+    else{
+        if (MIN_AD_LENGTH > context->adlen) {
+            return ARGON2_AD_TOO_SHORT;
+        }
+        if (MAX_AD_LENGTH < context->adlen) {
+            return ARGON2_AD_TOO_LONG;
+        }
     }
 
     /* Validate memory cost */
