@@ -1,0 +1,3 @@
+# Ignore the KAT files
+kat-argon2-ref.log
+kat-argon2-opt.log
