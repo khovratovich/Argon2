@@ -15,7 +15,7 @@
 
 /************************* Constants to enable Known Answer Tests (KAT)  **************************************************/
 /* Enable KAT */
-#define KAT
+//#define KAT
 //#define KAT_INTERNAL
 
 
