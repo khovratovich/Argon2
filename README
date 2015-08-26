@@ -16,6 +16,10 @@ Build result:
     - argon2-tv         Argon2 with debug messages
     - libargon2.so      Argon2 shared library
     - argon2-lib-test   Argon2 built with the shared library libargon2.so
+    
+Usage
+======
+argon2 -benchmark  Benchmarks Argon2d, Argon2id, Argon2i, Argon2ds with different level of parallelism
 
 
 Copyright
