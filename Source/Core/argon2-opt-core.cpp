@@ -173,11 +173,12 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
     uint64_t pseudo_rand, ref_index, ref_lane;
     uint32_t prev_offset, curr_offset;
     __m128i state[64];
+	bool data_independent_addressing = (instance->type == Argon2_i) || (instance->type == Argon2_id && (position.pass == 0) && (position.slice < SYNC_POINTS / 2));
     if (instance != NULL) {
         // Pseudo-random values that determine the reference block position
         uint64_t *pseudo_rands = new uint64_t[instance->segment_length];
         if (pseudo_rands != NULL) {
-            if (instance->type == Argon2_i) {
+			if (data_independent_addressing) {
                 GenerateAddresses(instance, &position, pseudo_rands);
             }
 
@@ -204,7 +205,7 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
 
                 /* 1.2 Computing the index of the reference block */
                 /* 1.2.1 Taking pseudo-random value from the previous block */
-                if (instance->type == Argon2_i) {
+				if (data_independent_addressing) {
                     pseudo_rand = pseudo_rands[i];
                 } else {
                     pseudo_rand = instance->state[prev_offset][0];
