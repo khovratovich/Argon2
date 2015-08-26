@@ -50,7 +50,7 @@ int Argon2ds(Argon2_Context* context) {
 	return Argon2Core(context, Argon2_ds);
 }
 
-bool Verify(Argon2_Context* context, const char *hash) {
+bool VerifyD(Argon2_Context* context, const char *hash) {
     if (0 == context->outlen || NULL == hash) {
         return false;
     }
