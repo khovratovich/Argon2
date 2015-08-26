@@ -137,10 +137,10 @@ static const char *Argon2_ErrorMessage[] = {
     "Too few lanes",
     "Too many lanes",
 
-    "Password pointer is NULL, but password length is 0",
-    "Salt pointer is NULL, but password length is 0",
-    "Secret pointer is NULL, but password length is 0",
-    "Associated data pointer is NULL, but password length is 0",
+    "Password pointer is NULL, but password length is not 0",
+    "Salt pointer is NULL, but salt length is not 0",
+    "Secret pointer is NULL, but secret length is not 0",
+    "Associated data pointer is NULL, but ad length is not 0",
 
     "Memory allocation error",
 
