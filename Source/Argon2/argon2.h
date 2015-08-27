@@ -13,6 +13,7 @@
 
 #include <cstddef>
 
+
 /************************* Constants to enable Known Answer Tests (KAT)  **************************************************/
 /* Enable KAT */
 //#define KAT
@@ -103,52 +104,14 @@ enum Argon2_ErrorCodes {
     ARGON2_ALLOCATE_MEMORY_CBK_NULL = 24,
 
     ARGON2_INCORRECT_PARAMETER = 25,
+    ARGON2_INCORRECT_TYPE = 26,
+
+    ARGON2_OUT_PTR_MISMATCH = 27,
 
     ARGON2_ERROR_CODES_LENGTH /* Do NOT remove; Do NOT add error codes after this error code */
 };
 
-/************************* Error messages *********************************************************************************/
-static const char *Argon2_ErrorMessage[] = {
-    "OK",
 
-    "Output pointer is NULL",
-
-    "Output is too short",
-    "Output is too long",
-
-    "Password is too short",
-    "Password is too long",
-
-    "Salt is too short",
-    "Salt is too long",
-
-    "Associated data is too short",
-    "Associated date is too long",
-
-    "Secret is too short",
-    "Secret is too long",
-
-    "Time cost is too small",
-    "Time cost is too large",
-
-    "Memory cost is too small",
-    "Memory cost is too large",
-
-    "Too few lanes",
-    "Too many lanes",
-
-    "Password pointer is NULL, but password length is not 0",
-    "Salt pointer is NULL, but salt length is not 0",
-    "Secret pointer is NULL, but secret length is not 0",
-    "Associated data pointer is NULL, but ad length is not 0",
-
-    "Memory allocation error",
-
-    "The free memory callback is NULL",
-    "The allocate memory callback is NULL",
-
-    "Argon2_Context context is NULL"
-};
 
 /********************************************* Memory allocator types --- for external allocation *************************************************************/
 typedef int (*AllocateMemoryCallback)(uint8_t **memory, size_t bytes_to_allocate);
@@ -236,7 +199,7 @@ extern "C" int PHS(void *out, size_t outlen, const void *in, size_t inlen, const
         unsigned int t_cost, unsigned int m_cost);
 
 /*
-  * **************Argon2d: Version of Argon2 that picks memory blocks depending on the password and salt. Only for side-channel-free environment!!***************
+ * **************Argon2d: Version of Argon2 that picks memory blocks depending on the password and salt. Only for side-channel-free environment!!***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
@@ -244,7 +207,7 @@ extern int Argon2d(Argon2_Context* context);
 
 /*
  *  * **************Argon2i: Version of Argon2 that picks memory blocks independing on the password and salt. Good for side-channels,
-******************* but worse w.r.t. tradeoff attacks if
+ ******************* but worse w.r.t. tradeoff attacks if
  *******************only one pass is used***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
@@ -259,10 +222,10 @@ extern int Argon2i(Argon2_Context* context);
 extern int Argon2di(Argon2_Context* context);
 
 /*
-*   * **************Argon2ds: Argon2d hardened against GPU attacks, 20% slower***************
-* @param  context  Pointer to current Argon2 context
-* @return  Zero if successful, a non zero error code otherwise
-*/
+ *   * **************Argon2ds: Argon2d hardened against GPU attacks, 20% slower***************
+ * @param  context  Pointer to current Argon2 context
+ * @return  Zero if successful, a non zero error code otherwise
+ */
 extern int Argon2ds(Argon2_Context* context);
 
 
@@ -278,8 +241,9 @@ extern int Argon2id(Argon2_Context* context);
  * Verify if a given password is correct for Argon2d hashing
  * @param  context  Pointer to current Argon2 context
  * @param  hash  The password hash to verify. The length of the hash is specified by the context outlen member
+ * @return  Zero if successful, a non zero error code otherwise
  */
-extern bool VerifyD(Argon2_Context* context, const char *hash);
+extern int VerifyD(Argon2_Context* context, const char *hash);
 
 /*
  * Get the associated error message for given erro code

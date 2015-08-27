@@ -14,8 +14,10 @@
 #ifndef __BLAKE2B_ROUND_H__
 #define __BLAKE2B_ROUND_H__
 
+/* Argon2 Team - Begin Code */
 #define LOAD(p)  _mm_load_si128( (const __m128i *)(p) )
 #define STORE(p,r) _mm_store_si128((__m128i *)(p), r)
+/* Argon2 Team - End Code */
 
 #define LOADU(p)  _mm_loadu_si128( (const __m128i *)(p) )
 #define STOREU(p,r) _mm_storeu_si128((__m128i *)(p), r)

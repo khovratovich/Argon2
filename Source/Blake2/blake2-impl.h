@@ -16,6 +16,15 @@
 
 #include <stdint.h>
 
+/* Argon2 Team - Begin Code */
+#include "brg-endian.h"
+
+#if defined(PLATFORM_BYTE_ORDER) && (PLATFORM_BYTE_ORDER == IS_LITTLE_ENDIAN) && !defined(NATIVE_LITTLE_ENDIAN)
+#define NATIVE_LITTLE_ENDIAN
+#endif
+/* Argon2 Team - End Code */
+
+
 static inline uint32_t load32( const void *src )
 {
 #if defined(NATIVE_LITTLE_ENDIAN)

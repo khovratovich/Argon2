@@ -431,6 +431,7 @@ int main( int argc, char **argv )
 }
 #endif
 
+/* Argon2 Team - Begin Code */
 int blake2b_long(uint8_t *out, const void *in, const uint32_t outlen, const uint64_t inlen)
 {
 	blake2b_state blake_state;
@@ -467,3 +468,4 @@ int blake2b_long(uint8_t *out, const void *in, const uint32_t outlen, const uint
 	}
 	return 0;
 }
+/* Argon2 Team - End Code */

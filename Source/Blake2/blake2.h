@@ -17,11 +17,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* Argon2 Team - Begin Code */
 #if defined(_MSC_VER)
 #define ALIGN(x) __declspec(align(x))
 #else
 #define ALIGN(x) __attribute__ ((__aligned__(x)))
 #endif
+/* Argon2 Team - End Code */
 
 #if defined(__cplusplus)
 extern "C" {
@@ -139,7 +141,9 @@ extern "C" {
   // Simple API
   int blake2s( uint8_t *out, const void *in, const void *key, const uint8_t outlen, const uint64_t inlen, uint8_t keylen );
   int blake2b( uint8_t *out, const void *in, const void *key, const uint8_t outlen, const uint64_t inlen, uint8_t keylen );
+  /* Argon2 Team - Begin Code */
   int blake2b_long(uint8_t *out, const void *in, const uint32_t outlen, const uint64_t inlen);
+  /* Argon2 Team - End Code */
 
   int blake2sp( uint8_t *out, const void *in, const void *key, const uint8_t outlen, const uint64_t inlen, uint8_t keylen );
   int blake2bp( uint8_t *out, const void *in, const void *key, const uint8_t outlen, const uint64_t inlen, uint8_t keylen );

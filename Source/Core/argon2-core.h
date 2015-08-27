@@ -38,8 +38,10 @@ enum Argon2_type {
     Argon2_i=1,
     Argon2_di=2,
     Argon2_id=3,
-    Argon2_ds=4
+    Argon2_ds=4,
+    MAX_ARGON2_TYPE /* Do NOT remove; Do NOT other types after this one */
 };
+
 
 /*****SM-related constants******/
 const uint32_t SBOX_SIZE = 1 << 10;
@@ -168,13 +170,6 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
  * @return ARGON2_OK if everything is all right, otherwise one of error codes (all defined in <argon2.h>
  */
 int ValidateInputs(const Argon2_Context* context);
-
-/**
- *Functions converts number to little endian if needed
- *@param input number to be converted
- *@return number with bytes in reversed order
- */
-static inline uint32_t ToLittleEndian(uint32_t input);
 
 /*
  * Hashes all the inputs into @a blockhash[PREHASH_DIGEST_LENGTH], clears password and secret if needed

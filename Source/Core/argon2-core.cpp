@@ -22,14 +22,13 @@ using namespace std;
 
 
 #include "blake2.h"
+#include "blake2-impl.h"
 
 block operator^(const block& l, const block& r) {
     block a = l;
     a ^= r;
     return a;
 }
-
-
 
 int AllocateMemory(block **memory, uint32_t m_cost) {
     if (memory != NULL) {
@@ -176,12 +175,11 @@ int ValidateInputs(const Argon2_Context* context) {
     }
 
     /* Validate password length */
-    if (NULL == context->pwd){
-        if(0 != context->pwdlen) {
+    if (NULL == context->pwd) {
+        if (0 != context->pwdlen) {
             return ARGON2_PWD_PTR_MISMATCH;
         }
-    }
-    else{
+    } else {
         if (MIN_PWD_LENGTH > context->pwdlen) {
             return ARGON2_PWD_TOO_SHORT;
         }
@@ -191,12 +189,11 @@ int ValidateInputs(const Argon2_Context* context) {
     }
 
     /* Validate salt length */
-    if (NULL == context->salt){
-        if(0 != context->saltlen) {
+    if (NULL == context->salt) {
+        if (0 != context->saltlen) {
             return ARGON2_SALT_PTR_MISMATCH;
         }
-    }
-    else{
+    } else {
         if (MIN_SALT_LENGTH > context->saltlen) {
             return ARGON2_SALT_TOO_SHORT;
         }
@@ -206,12 +203,11 @@ int ValidateInputs(const Argon2_Context* context) {
     }
 
     /* Validate secret length */
-    if (NULL == context->secret){
-        if(0 != context->secretlen) {
+    if (NULL == context->secret) {
+        if (0 != context->secretlen) {
             return ARGON2_SECRET_PTR_MISMATCH;
         }
-    }
-    else{
+    } else {
         if (MIN_SECRET > context->secretlen) {
             return ARGON2_SECRET_TOO_SHORT;
         }
@@ -221,12 +217,11 @@ int ValidateInputs(const Argon2_Context* context) {
     }
 
     /* Validate associated data */
-    if (NULL == context->ad){
-        if(0 != context->adlen) {
+    if (NULL == context->ad) {
+        if (0 != context->adlen) {
             return ARGON2_AD_PTR_MISMATCH;
         }
-    }
-    else{
+    } else {
         if (MIN_AD_LENGTH > context->adlen) {
             return ARGON2_AD_TOO_SHORT;
         }
@@ -270,14 +265,6 @@ int ValidateInputs(const Argon2_Context* context) {
     return ARGON2_OK;
 }
 
-static inline uint32_t ToLittleEndian(uint32_t input) {
-#if defined(LITTLE_ENDIAN)
-    return input;
-#else
-    return BSWAP32(input);
-#endif
-}
-
 void FillFirstBlocks(uint8_t* blockhash, const Argon2_instance_t* instance) {
     // Make the first and second block in each lane as G(H0||i||0) or G(H0||i||1)
     for (uint8_t l = 0; l < instance->lanes; ++l) {
@@ -292,7 +279,7 @@ void FillFirstBlocks(uint8_t* blockhash, const Argon2_instance_t* instance) {
 
 void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) {
     blake2b_state BlakeHash;
-    uint32_t value;
+    uint8_t value[sizeof (uint32_t)];
 
     if (NULL == context || NULL == blockhash) {
         return;
@@ -300,25 +287,25 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
 
     blake2b_init(&BlakeHash, PREHASH_DIGEST_LENGTH);
 
-    value = ToLittleEndian(context->lanes);
+    store32(&value, context->lanes);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
-    value = ToLittleEndian(context->outlen);
+    store32(&value, context->outlen);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
-    value = ToLittleEndian(context->m_cost);
+    store32(&value, context->m_cost);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
-    value = ToLittleEndian(context->t_cost);
+    store32(&value, context->t_cost);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
-    value = ToLittleEndian(VERSION_NUMBER);
+    store32(&value, VERSION_NUMBER);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
-    value = ToLittleEndian((uint32_t) type);
+    store32(&value, (uint32_t) type);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
-    value = ToLittleEndian(context->pwdlen);
+    store32(&value, context->pwdlen);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
     if (context->pwd != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->pwd, context->pwdlen);
@@ -328,13 +315,13 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
         }
     }
 
-    value = ToLittleEndian(context->saltlen);
+    store32(&value, context->saltlen);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
     if (context->salt != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->salt, context->saltlen);
     }
 
-    value = ToLittleEndian(context->secretlen);
+    store32(&value, context->secretlen);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
     if (context->secret != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->secret, context->secretlen);
@@ -344,7 +331,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
         }
     }
 
-    value = ToLittleEndian(context->adlen);
+    store32(&value, context->adlen);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
     if (context->ad != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->ad, context->adlen);
@@ -395,6 +382,8 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     if (ARGON2_OK != result) {
         return result;
     }
+    if (type > MAX_ARGON2_TYPE)
+        return ARGON2_INCORRECT_TYPE;
 
     /* 2. Align memory size */
     // Minimum memory_blocks = 8L blocks, where L is the number of lanes

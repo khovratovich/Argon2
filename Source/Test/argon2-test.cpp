@@ -240,27 +240,27 @@ void GenerateTestVectors(const std::string &type) {
             myown_allocator, myown_deallocator,
             clear_password, clear_secret, clear_memory);
 
-    if (type==std::string("Argon2d")) {
+    if (type == std::string("Argon2d")) {
         printf("Test Argon2d\n");
         Argon2d(&context);
         return;
     }
-    if (type==std::string("Argon2i")) {
+    if (type == std::string("Argon2i")) {
         printf("Test Argon2i\n");
         Argon2i(&context);
         return;
     }
-    if (type==std::string("Argon2di")) {
+    if (type == std::string("Argon2di")) {
         printf("Test Argon2di\n");
         Argon2i(&context);
         return;
     }
-    if (type==std::string("Argon2ds")) {
+    if (type == std::string("Argon2ds")) {
         printf("Test Argon2ds\n");
         Argon2ds(&context);
         return;
     }
-    if (type==std::string("Argon2id")) {
+    if (type == std::string("Argon2id")) {
         printf("Test Argon2id\n");
         Argon2id(&context);
         return;
@@ -296,7 +296,7 @@ void VerifyTest(bool modify = false) {
             clear_input, clear_input, clear_memory);
     Argon2d(&context);
 
-    memcpy(hash, context.out, std::min(context.outlen,out_length));
+    memcpy(hash, context.out, std::min(context.outlen, out_length));
 
     if (modify) {
         // Change the hash value
@@ -311,7 +311,7 @@ void VerifyTest(bool modify = false) {
 }
 
 int main(int argc, char* argv[]) {
-   // const unsigned int argon2_type_length = 10;
+    // const unsigned int argon2_type_length = 10;
 
     unsigned char out[32];
 
@@ -407,10 +407,10 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[i], "-type") == 0) {
             if (i < argc - 1) {
                 i++;
-              type =std:: string(argv[i]);
-//                      if (argon2_type_length >= strlen(argv[i])) {
- //                   memcpy(type, argv[i], strlen(argv[i]));
-  //              }
+                type = std::string(argv[i]);
+                //                      if (argon2_type_length >= strlen(argv[i])) {
+                //                   memcpy(type, argv[i], strlen(argv[i]));
+                //              }
                 continue;
             }
         }

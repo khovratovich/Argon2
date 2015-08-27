@@ -17,6 +17,7 @@ ARGON2_DIR = Source/Argon2
 CORE_DIR = Source/Core
 BLAKE2_DIR = Source/Blake2
 TEST_DIR = Source/Test
+COMMON_DIR = Source/Common
 
 ARGON2_SOURCES = argon2.cpp
 CORE_SOURCES = argon2-core.cpp kat.cpp
@@ -64,6 +65,7 @@ argon2:
 		-I$(CORE_DIR) \
 		-I$(BLAKE2_DIR) \
 		-I$(TEST_DIR) \
+		-I$(COMMON_DIR) \
 		-o $(BUILD_DIR)/$@
 
 
@@ -78,6 +80,7 @@ argon2-tv:
 		-I$(CORE_DIR) \
 		-I$(BLAKE2_DIR) \
 		-I$(TEST_DIR) \
+		-I$(COMMON_DIR) \
 		-o $(BUILD_DIR)/$@
 
 
@@ -91,6 +94,7 @@ argon2-lib:
 		-I$(ARGON2_DIR) \
 		-I$(CORE_DIR) \
 		-I$(BLAKE2_DIR) \
+		-I$(COMMON_DIR) \
 		-o $(BUILD_DIR)/lib$(LIBNAME).so
 
 
@@ -100,7 +104,6 @@ argon2-lib-test:
 		$(TEST_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
 		-I$(TEST_DIR) \
-		-I$(BLAKE2_DIR) \
 		-L$(BUILD_DIR) \
 		-Wl,-rpath=$(BUILD_DIR) \
 		-l$(LIBNAME) \
@@ -119,3 +122,4 @@ cleanall: clean
 	rm -f $(CORE_DIR)/*~
 	rm -f $(BLAKE2_DIR)/*~
 	rm -f $(TEST_DIR)/*~
+	rm -f $(COMMON_DIR)/*~
