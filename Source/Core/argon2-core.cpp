@@ -10,6 +10,13 @@
 
 using namespace std;
 
+#ifdef _MSC_VER
+#include "WinBase.h" //For SecureZeroMemory
+#else
+#define __STDC_LIB_EXT1__
+#define __STDC_WANT_LIB_EXT1__ 1
+#include "string.h"  //For memset_s()
+#endif
 
 #include <inttypes.h>
 #include <vector>
@@ -23,6 +30,9 @@ using namespace std;
 
 #include "blake2.h"
 #include "blake2-impl.h"
+
+ static void* (* const volatile memset_sec)(void*, int, size_t) = &memset;
+
 
 block operator^(const block& l, const block& r) {
     block a = l;
@@ -40,13 +50,29 @@ int AllocateMemory(block **memory, uint32_t m_cost) {
     } else return ARGON2_MEMORY_ALLOCATION_ERROR;
 }
 
-void FreeMemory(Argon2_instance_t* instance, bool clear_memory) {
+/* Function that securely cleans the memory
+* @param mem Pointer to the memory
+* @param s Memory size in bytes
+*/
+
+static inline void secure_wipe_memory( void *v, size_t n )
+{
+#if defined _MSC_VER
+    SecureZeroMemory(v,n);
+#elif defined memset_s
+    memset_s(v, n);
+#else
+    memset_sec(v,0,n);
+#endif
+} 
+
+void FreeMemory(Argon2_instance_t* instance, bool clear) {
     if (instance->state != NULL) {
-        if (clear_memory) {
+        if (clear) {
             if (instance->type == Argon2_ds && instance->Sbox != NULL) {
-                memset(instance->Sbox, 0, SBOX_SIZE * sizeof (uint64_t));
+                secure_wipe_memory(instance->Sbox, SBOX_SIZE * sizeof (uint64_t));
             }
-            memset(instance->state, 0, sizeof (block) * instance->memory_blocks);
+            secure_wipe_memory(instance->state, sizeof (block) * instance->memory_blocks);
         }
         delete[] instance->state;
         if (instance->Sbox != NULL)
@@ -67,7 +93,7 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
 
         // Hash the result
         blake2b_long(context->out, (uint8_t*) blockhash.v, context->outlen, BLOCK_SIZE);
-        memset(blockhash.v, 0, BLOCK_SIZE); //clear the blockhash
+        secure_wipe_memory(blockhash.v,  BLOCK_SIZE); //clear the blockhash
 #ifdef KAT
         PrintTag(context->out, context->outlen);
 #endif 
@@ -310,7 +336,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
     if (context->pwd != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->pwd, context->pwdlen);
         if (context->clear_password) {
-            memset(context->pwd, 0, context->pwdlen);
+            secure_wipe_memory(context->pwd,  context->pwdlen);
             context->pwdlen = 0;
         }
     }
@@ -326,7 +352,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
     if (context->secret != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->secret, context->secretlen);
         if (context->clear_secret) {
-            memset(context->secret, 0, context->secretlen);
+            secure_wipe_memory(context->secret, context->secretlen);
             context->secretlen = 0;
         }
     }
@@ -362,7 +388,7 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
     // Hashing all inputs
     InitialHash(blockhash, context, instance->type);
     // Zeroing 8 extra bytes
-    memset(blockhash + PREHASH_DIGEST_LENGTH, 0, PREHASH_SEED_LENGTH - PREHASH_DIGEST_LENGTH);
+    secure_wipe_memory(blockhash + PREHASH_DIGEST_LENGTH, PREHASH_SEED_LENGTH - PREHASH_DIGEST_LENGTH);
 
 #ifdef KAT
     InitialKat(blockhash, context, instance->type);
@@ -371,7 +397,7 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
     // 3. Creating first blocks, we always have at least two blocks in a slice
     FillFirstBlocks(blockhash, instance);
     // Clearing the hash
-    memset(blockhash, 0, PREHASH_SEED_LENGTH);
+    secure_wipe_memory(blockhash,  PREHASH_SEED_LENGTH);
 
     return ARGON2_OK;
 }
