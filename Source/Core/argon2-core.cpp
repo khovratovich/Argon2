@@ -31,7 +31,22 @@ using namespace std;
 #include "blake2.h"
 #include "blake2-impl.h"
 
- static void* (* const volatile memset_sec)(void*, int, size_t) = &memset;
+ #if defined(__clang__)
+#if __has_attribute(optnone)
+#define NOT_OPTIMIZED __attribute__((optnone))
+#endif
+#elif defined(__GNUC__)
+#define GCC_VERSION (__GNUC__ * 10000 \
+                    + __GNUC_MINOR__ * 100 \
+                    + __GNUC_PATCHLEVEL__)
+#if GCC_VERSION >= 40400
+ #define NOT_OPTIMIZED __attribute__((optimize("O0")))
+#endif
+#else 
+#define NOT_OPTIMIZED
+#endif
+
+static void* (* const volatile memset_sec)(void*, int, size_t) = &memset;
 
 
 block operator^(const block& l, const block& r) {
@@ -55,7 +70,7 @@ int AllocateMemory(block **memory, uint32_t m_cost) {
 * @param s Memory size in bytes
 */
 
-static inline void secure_wipe_memory( void *v, size_t n )
+static inline void NOT_OPTIMIZED secure_wipe_memory( void *v, size_t n )
 {
 #if defined _MSC_VER
     SecureZeroMemory(v,n);
