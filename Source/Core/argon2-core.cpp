@@ -11,17 +11,17 @@
 using namespace std;
 
 #ifdef _MSC_VER
-#include "WinBase.h" //For SecureZeroMemory
-#else
-#define __STDC_LIB_EXT1__
+#include "windows.h"
+#include "winbase.h" //For SecureZeroMemory
+#endif
+#if defined __STDC_LIB_EXT1__
 #define __STDC_WANT_LIB_EXT1__ 1
-#include "string.h"  //For memset_s()
 #endif
 
 #include <inttypes.h>
 #include <vector>
 #include <thread>
-
+#include <cstring>
 
 #include "argon2.h"
 #include "argon2-core.h"
@@ -46,7 +46,7 @@ using namespace std;
 #define NOT_OPTIMIZED
 #endif
 
-static void* (* const volatile memset_sec)(void*, int, size_t) = &memset;
+
 
 
 block operator^(const block& l, const block& r) {
@@ -76,7 +76,10 @@ static inline void NOT_OPTIMIZED secure_wipe_memory( void *v, size_t n )
     SecureZeroMemory(v,n);
 #elif defined memset_s
     memset_s(v, n);
+#elif defined( __OpenBSD__ )
+	explicit_bzero( memory, size );
 #else
+	static void* (*const volatile memset_sec)(void*, int, size_t) = &memset;
     memset_sec(v,0,n);
 #endif
 } 
@@ -172,7 +175,7 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
     return absolute_position;
 }
 
-void FillMemory(Argon2_instance_t* instance) {
+void FillMemoryBlocks(Argon2_instance_t* instance) {
     vector<thread> Threads;
     if (instance != NULL) {
         for (uint8_t r = 0; r < instance->passes; ++r) {
@@ -444,7 +447,7 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     }
 
     /* 4. Filling memory */
-    FillMemory(&instance);
+    FillMemoryBlocks(&instance);
 
     /* 5. Finalization */
     Finalize(context, &instance);
