@@ -13,6 +13,7 @@ using namespace std;
 #ifdef _MSC_VER
 #include "windows.h"
 #include "winbase.h" //For SecureZeroMemory
+#define VC_GE_2005( version )		( version >= 1400 )
 #endif
 #if defined __STDC_LIB_EXT1__
 #define __STDC_WANT_LIB_EXT1__ 1
@@ -72,7 +73,7 @@ int AllocateMemory(block **memory, uint32_t m_cost) {
 
 static inline void NOT_OPTIMIZED secure_wipe_memory( void *v, size_t n )
 {
-#if defined _MSC_VER
+#if defined  (_MSC_VER ) &&  VC_GE_2005( _MSC_VER )
     SecureZeroMemory(v,n);
 #elif defined memset_s
     memset_s(v, n);
