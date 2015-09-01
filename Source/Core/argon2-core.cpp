@@ -10,14 +10,16 @@
 
 using namespace std;
 
+/*For memory wiping*/
 #ifdef _MSC_VER
 #include "windows.h"
 #include "winbase.h" //For SecureZeroMemory
-#define VC_GE_2005( version )		( version >= 1400 )
 #endif
 #if defined __STDC_LIB_EXT1__
 #define __STDC_WANT_LIB_EXT1__ 1
 #endif
+#define VC_GE_2005( version )		( version >= 1400 )
+
 
 #include <inttypes.h>
 #include <vector>
