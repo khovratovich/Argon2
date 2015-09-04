@@ -132,7 +132,7 @@ void Benchmark() {
             start_cycles = __rdtscp(&ui1);
 #endif
 
-            Argon2_Context context(out, outlen, zero_array, inlen, one_array, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, thread_n);
+            Argon2_Context context(out, outlen, zero_array, inlen, one_array, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, thread_n,NULL,NULL,false,false, false);
             Argon2d(&context);
 
 #ifdef _MEASURE

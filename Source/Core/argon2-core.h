@@ -235,7 +235,7 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position);
  * Function that fills the entire memory t_cost times based on the first two blocks in each lane
  * @param instance Pointer to the current instance
  */
-void FillMemory(const Argon2_instance_t* instance);
+void FillMemoryBlocks(const Argon2_instance_t* instance);
 
 
 /*
