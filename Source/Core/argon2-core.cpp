@@ -336,8 +336,6 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
     if (context->ad != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->ad, context->adlen);
     }
-    uint8_t tmp[PREHASH_DIGEST_LENGTH];
-    blake2b_final(&BlakeHash, tmp, PREHASH_DIGEST_LENGTH);
     blake2b_final(&BlakeHash, blockhash, PREHASH_DIGEST_LENGTH);
 }
 
