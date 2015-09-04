@@ -200,15 +200,15 @@ Here $H_0$ is 64-byte value, and the parameters $p,\tau,m,t,v,y,
 \langle P \rangle,\langle S \rangle, \langle K \rangle,\langle X \rangle$ are treated as little-endian 32-bit integers.
 
 \textsf{Argon2}\ then fills the memory with $m$ 1024-byte blocks. For tunable parallelism with $p$ threads, the memory is organized in a matrix $B[i][j]$ of blocks
-with $p$ rows (\emph{lanes}) and $q=\lfloor m/d \rfloor$ columns. Blocks are computed as follows:
+with $p$ rows (\emph{lanes}) and $q=\lfloor m/p \rfloor$ columns. Blocks are computed as follows:
 \begin{align*}
-B[i][0] &= G(H_0,\underbrace{i}_{\text{4 bytes}}||\underbrace{0}_{\text{4 bytes}}),\quad 0 \leq i < p; \\
-B[i][1] &= G(H_0,\underbrace{i}_{\text{4 bytes}}||\underbrace{1}_{\text{4 bytes}}),\quad 0 \leq i < p;\\
+B[i][0] &= H'(H_0||\underbrace{i}_{\text{4 bytes}}||\underbrace{0}_{\text{4 bytes}}),\quad 0 \leq i < p; \\
+B[i][1] &= H'(H_0||\underbrace{i}_{\text{4 bytes}}||\underbrace{1}_{\text{4 bytes}}),\quad 0 \leq i < p;\\
 B[i][j] &= G(B[i][j-1], B[i'][j']),\quad 0 \leq i < p,\; 2\leq j <q.
 \end{align*}
-where block index $[i'][j']$ is determined differently for \textsf{Argon2d} and \textsf{Argon2i}, and $G$ is the compression function. Both will be fully defined in the further text. The inputs to $G$ that are not full blocks, are prepended by necessary number of zeros.
+where block index $[i'][j']$ is determined differently for \textsf{Argon2d/2ds} and \textsf{Argon2i},  $G$ is the compression function, and $H'$ is a variable-length hash function built upon $H$. Both $G$ and $H'$ will be fully defined in the further text. 
 
-If $t>1$, we repeat the procedure; however the first two columns are now computed in the same way:
+If $t>1$, we repeat the procedure; however the first two blocks of a lane are now computed in the same way:
 \begin{align*}
 B[i][0] &=G(B[i][q-1], B[i'][j']);\\
 B[i][j] &= G(B[i][j-1], B[i'][j']).
@@ -218,9 +218,20 @@ When we have done  $t$ iterations over the memory, we compute the final block $B
 $$
 B_m = B[0][q-1] \oplus B[1][q-1]\oplus \cdots\oplus B[d-1][q-1].
 $$
+Then we apply $H'$ to $B_m$ to get the output tag.
 
-The output tag is produced as follows. The hash function $\mathcal{H}$ is applied iteratively to $B_m$, each time outputting the first 32 bytes of the 64-byte hash value, until the total number
-of output bytes reaches $\tau$.
+\paragraph{Variable-length hash function.} Let $H_x$ be a hash function with $x$-byte output (in our case $H_x$ is Blake2b, which supports $1\leq x \leq 64$). We define $H'$ as follows. Let $V_i$ be a 64-byte block, and  $A_i$ be its first 32 bytes,
+and $\tau<2^{32}$ be the tag length in bytes. 
+Then we define
+\begin{align*}
+H'(X):\quad V_0 &\leftarrow\tau||X;\\
+V_1 &\leftarrow H_{64}(V_0);\\
+V_2 &\leftarrow H_{64}(V_1);\\
+&\cdots\\
+V_m & \leftarrow H_{64}(V_{m-1}),\quad m = \lfloor\tau/32\rfloor-1;\\
+V_{m+1} &\leftarrow H_{\tau\hspace{-10pt} \pmod{64}}(V_{m-1})\quad \text{(absent if  64 divides }\tau).\\
+\text{Tag} & \leftarrow A_1||A_2||\ldots A_m||V_{m+1}.
+\end{align*}
 
  \begin{figure}[ht]
   \ifpdf
@@ -829,12 +840,13 @@ The properties of $\mathcal{T}$ and its initialization procedure is subject to c
 
 \section{Change log}
 
-\subsection{v1.2.1 -- 26th August, 2015}
+\subsection{v1.2.1 -- 2d September, 2015}
 \begin{itemize}
 \item The total number of blocks can reach $2^{32}-1$;
 \item The reference block index now requires 64 bits; the lane number is computed separately.
 \item New modes \textsf{Argon2id} and \textsf{Argon2ds} are added as optional.
 \end{itemize}
+The specification of v1.2.1 released on 26th August, 2015, had incorrect description of the first block generation.
 
 \subsection{v1.2  -- 21th June, 2015}
 
