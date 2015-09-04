@@ -57,7 +57,11 @@ const uint32_t SBOX_MASK = SBOX_SIZE / 2 - 1;
 struct block {
     uint64_t v[WORDS_IN_BLOCK];
 
-    block(uint8_t in = 0) { //default ctor
+    block() { //default ctor
+        
+    }
+
+    block(uint8_t in) { 
         memset(v, in, BLOCK_SIZE);
     }
 
