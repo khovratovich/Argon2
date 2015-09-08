@@ -249,7 +249,7 @@ To enable parallel block computation, we further partition the memory matrix int
 
 \paragraph{Getting two 32-bit values.} In Argon2d we select  the first 32 bits of  block $B[i][j-1]$ and denote this value by $J_1$. Then we take the next 32 bits of $B[i][j-1]$ and denote this value by $J_2$. In \textsf{Argon2i} we run $G^2$ --- the 2-round compression function $G$ -- in the counter mode, where the first input is all-zero block, and the second input is constructed as 
   $$
-  (\underbrace{r}_{\text{8 bytes}}||\underbrace{l}_{\text{8 bytes}}||\underbrace{s}_{\text{8 bytes}}||\underbrace{m'}_{\text{8 bytes}}||\underbrace{t}_{\text{8 bytes}}||\underbrace{x}_{\text{8 bytes}}||\underbrace{i}_{\text{8 bytes}}||\underbrace{0}_{\text{968 bytes}},
+  (\underbrace{r}_{\text{8 bytes}}||\underbrace{l}_{\text{8 bytes}}||\underbrace{s}_{\text{8 bytes}}||\underbrace{m'}_{\text{8 bytes}}||\underbrace{t}_{\text{8 bytes}}||\underbrace{x}_{\text{8 bytes}}||\underbrace{i}_{\text{8 bytes}}||\underbrace{0}_{\text{968 bytes}}),
   $$ where
   \begin{itemize}
   \item $r$ is the pass number;
@@ -258,8 +258,8 @@ To enable parallel block computation, we further partition the memory matrix int
   \item $m'$ is the total number of memory blocks;
   \item $t$ is the total number of passes;
   \item $x$ is the type of the Argon function (equals $1$ for \textsf{Argon2i});
-  \item $i$ is is the counter starting in each segment from 0.
-  \end{itemize} All the numbers are put as little-endian. tWe increase the counter so that each application of $G^2$ gives 128 64-bit values $J_1||J_2$.
+  \item $i$ is  the counter starting in each segment from 1.
+  \end{itemize} All the numbers are put as little-endian. We increase the counter so that each application of $G^2$ gives 128 64-bit values $J_1||J_2$.
   
  \paragraph{Mapping $J_1,J_2$ to the reference block index} The value $l = J_2 \bmod p$ determines the index of the lane from which the block will be taken. If we work with the first slice and the first pass ($r=s=0$), then $l$ is set to the current lane index.  
  
@@ -840,13 +840,13 @@ The properties of $\mathcal{T}$ and its initialization procedure is subject to c
 
 \section{Change log}
 
-\subsection{v1.2.1 -- 2d September, 2015}
+\subsection{v1.2.1 -- 8th September, 2015}
 \begin{itemize}
 \item The total number of blocks can reach $2^{32}-1$;
 \item The reference block index now requires 64 bits; the lane number is computed separately.
 \item New modes \textsf{Argon2id} and \textsf{Argon2ds} are added as optional.
 \end{itemize}
-The specification of v1.2.1 released on 26th August, 2015, had incorrect description of the first block generation.
+The specification of v1.2.1 released on 26th August, 2015, had incorrect description of the first block generation. The version released on 2d September, 2015, had incorrect description of the counter used in generating addresses for \textsf{Argon2i}.
 
 \subsection{v1.2  -- 21th June, 2015}
 
@@ -860,3 +860,4 @@ Non-uniform  indexing rule, the compression function gets multiplications.
 \end{itemize}
 
 \end{document}
+
