@@ -8,8 +8,6 @@
  */
 
 
-using namespace std;
-
 /*For memory wiping*/
 #ifdef _MSC_VER
 #include "windows.h"
@@ -34,22 +32,22 @@ using namespace std;
 #include "blake2.h"
 #include "blake2-impl.h"
 
- #if defined(__clang__)
+#if defined(__clang__)
 #if __has_attribute(optnone)
 #define NOT_OPTIMIZED __attribute__((optnone))
+#else
+#define NOT_OPTIMIZED
 #endif
 #elif defined(__GNUC__)
 #define GCC_VERSION (__GNUC__ * 10000 \
                     + __GNUC_MINOR__ * 100 \
                     + __GNUC_PATCHLEVEL__)
 #if GCC_VERSION >= 40400
- #define NOT_OPTIMIZED __attribute__((optimize("O0")))
+#define NOT_OPTIMIZED __attribute__((optimize("O0")))
 #endif
 #else 
 #define NOT_OPTIMIZED
 #endif
-
-
 
 
 block operator^(const block& l, const block& r) {
@@ -179,7 +177,7 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
 }
 
 void FillMemoryBlocks(Argon2_instance_t* instance) {
-    vector<thread> Threads;
+    std::vector<std::thread> Threads;
     if (instance != NULL) {
         for (uint8_t r = 0; r < instance->passes; ++r) {
             if (Argon2_ds == instance->type) {
@@ -187,7 +185,7 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
             }
             for (uint8_t s = 0; s < SYNC_POINTS; ++s) {
                 for (uint8_t l = 0; l < instance->lanes; ++l) {
-                    Threads.push_back(thread(FillSegment, instance, Argon2_position_t(r, l, s, 0)));
+                    Threads.push_back(std::thread(FillSegment, instance, Argon2_position_t(r, l, s, 0)));
                 }
 
                 for (auto& t : Threads) {

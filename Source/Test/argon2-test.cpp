@@ -23,6 +23,12 @@
 /* Enable timing measurements */
 #define _MEASURE
 
+static inline uint64_t rdtscp(uint32_t *aux) {
+    uint64_t rax, rdx;
+    asm volatile ( "rdtscp\n" : "=a" (rax), "=d" (rdx), "=c" (aux) : : );
+    return (rdx << 32) + rax;
+}
+
 /*
  * Custom allocate memory
  */
@@ -66,7 +72,7 @@ void GenKat() {
                         uint32_t ui2, ui3;
 
                         clock_t start_time = clock();
-                        start_cycles = __rdtscp(&ui2);
+                        start_cycles = rdtscp(&ui2);
 #endif
 
                         //Argon2_Context context(out, outlen, zero_array, p_len, one_array, s_len, NULL, 0, NULL, 0, t_cost, m_cost, thr);
@@ -80,7 +86,7 @@ void GenKat() {
                         }
 
 #ifdef _MEASURE
-                        stop_cycles = __rdtscp(&ui3);
+                        stop_cycles = rdtscp(&ui3);
                         clock_t stop_time = clock();
 
                         delta = (stop_cycles - start_cycles) / (m_cost);
@@ -129,26 +135,26 @@ void Benchmark() {
             uint32_t ui1, ui2, ui3, ui4, ui5;
 
             clock_t start_time = clock();
-            start_cycles = __rdtscp(&ui1);
+            start_cycles = rdtscp(&ui1);
 #endif
 
             Argon2_Context context(out, outlen, zero_array, inlen, one_array, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, thread_n,NULL,NULL,false,false, false);
             Argon2d(&context);
 
 #ifdef _MEASURE
-            stop_cycles = __rdtscp(&ui2);
+            stop_cycles = rdtscp(&ui2);
 #endif
             Argon2i(&context);
 #ifdef _MEASURE
-            stop_cycles_i = __rdtscp(&ui3);
+            stop_cycles_i = rdtscp(&ui3);
 #endif
             Argon2id(&context);
 #ifdef _MEASURE
-            stop_cycles_di = __rdtscp(&ui4);
+            stop_cycles_di = rdtscp(&ui4);
 #endif
             Argon2ds(&context);
 #ifdef _MEASURE
-            stop_cycles_ds = __rdtscp(&ui5);
+            stop_cycles_ds = rdtscp(&ui5);
             clock_t stop_time = clock();
 
             uint64_t delta_d = (stop_cycles - start_cycles) / (m_cost);
@@ -177,7 +183,7 @@ void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost
     uint32_t ui1, ui2;
 
     clock_t start_time = clock();
-    start_cycles = __rdtscp(&ui1);
+    start_cycles = rdtscp(&ui1);
 #endif
 
     unsigned char zero_array[256];
@@ -189,7 +195,7 @@ void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost
     PHS(out, outlen, zero_array, inlen, one_array, saltlen, t_cost, m_cost);
 
 #ifdef _MEASURE
-    stop_cycles = __rdtscp(&ui2);
+    stop_cycles = rdtscp(&ui2);
     clock_t finish_time = clock();
 
     delta = (stop_cycles - start_cycles) / (m_cost);
