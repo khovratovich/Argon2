@@ -49,7 +49,6 @@
 #define NOT_OPTIMIZED
 #endif
 
-
 block operator^(const block& l, const block& r) {
     block a = l;
     a ^= r;
@@ -67,25 +66,24 @@ int AllocateMemory(block **memory, uint32_t m_cost) {
 }
 
 /* Function that securely cleans the memory
-* @param mem Pointer to the memory
-* @param s Memory size in bytes
-*/
+ * @param mem Pointer to the memory
+ * @param s Memory size in bytes
+ */
 
-static inline void NOT_OPTIMIZED secure_wipe_memory( void *v, size_t n )
-{
+static inline void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
 #if defined  (_MSC_VER ) &&  VC_GE_2005( _MSC_VER )
-    SecureZeroMemory(v,n);
+    SecureZeroMemory(v, n);
 #elif defined memset_s
     memset_s(v, n);
 #elif defined( __OpenBSD__ )
-	explicit_bzero( memory, size );
+    explicit_bzero(memory, size);
 #else
-	static void* (*const volatile memset_sec)(void*, int, size_t) = &memset;
-    memset_sec(v,0,n);
+    static void* (*const volatile memset_sec)(void*, int, size_t) = &memset;
+    memset_sec(v, 0, n);
 #endif
-} 
+}
 
-void FreeMemory(Argon2_instance_t* instance, bool clear) {
+void ClearMemory(Argon2_instance_t* instance, bool clear) {
     if (instance->state != NULL) {
         if (clear) {
             if (instance->type == Argon2_ds && instance->Sbox != NULL) {
@@ -93,9 +91,16 @@ void FreeMemory(Argon2_instance_t* instance, bool clear) {
             }
             secure_wipe_memory(instance->state, sizeof (block) * instance->memory_blocks);
         }
-        delete[] instance->state;
-        if (instance->Sbox != NULL)
+
+        if (instance->Sbox != NULL) {
             delete[] instance->Sbox;
+        }
+    }
+}
+
+void FreeMemory(block* memory) {
+    if (memory != NULL) {
+        delete[] memory;
     }
 }
 
@@ -112,16 +117,19 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
 
         // Hash the result
         blake2b_long(context->out, (uint8_t*) blockhash.v, context->outlen, ARGON2_BLOCK_SIZE);
-        secure_wipe_memory(blockhash.v,  ARGON2_BLOCK_SIZE); //clear the blockhash
+        secure_wipe_memory(blockhash.v, ARGON2_BLOCK_SIZE); //clear the blockhash
 #ifdef ARGON2_KAT
         PrintTag(context->out, context->outlen);
 #endif 
+
+        // Clear memory
+        ClearMemory(instance, context->clear_memory);
 
         // Deallocate the memory
         if (NULL != context->free_cbk) {
             context->free_cbk((uint8_t *) instance->state, instance->memory_blocks * sizeof (block));
         } else {
-            FreeMemory(instance, context->clear_memory);
+            FreeMemory(instance->state);
         }
 
     }
@@ -355,7 +363,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
     if (context->pwd != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->pwd, context->pwdlen);
         if (context->clear_password) {
-            secure_wipe_memory(context->pwd,  context->pwdlen);
+            secure_wipe_memory(context->pwd, context->pwdlen);
             context->pwdlen = 0;
         }
     }
@@ -414,7 +422,7 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
     // 3. Creating first blocks, we always have at least two blocks in a slice
     FillFirstBlocks(blockhash, instance);
     // Clearing the hash
-    secure_wipe_memory(blockhash,  ARGON2_PREHASH_SEED_LENGTH);
+    secure_wipe_memory(blockhash, ARGON2_PREHASH_SEED_LENGTH);
 
     return ARGON2_OK;
 }
