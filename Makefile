@@ -13,11 +13,11 @@ REF_CFLAGS = -std=c++11 -pthread -O3
 OPT_CFLAGS = -std=c++11 -pthread -O3 -m64 -mavx
 
 
-ARGON2_DIR = Source/Argon2
-CORE_DIR = Source/Core
-BLAKE2_DIR = Source/Blake2
-TEST_DIR = Source/Test
-COMMON_DIR = Source/Common
+ARGON2_DIR = ./Source/Argon2
+CORE_DIR = ./Source/Core
+BLAKE2_DIR = ./Source/Blake2
+TEST_DIR = ./Source/Test
+COMMON_DIR = ./Source/Common
 
 ARGON2_SOURCES = argon2.cpp
 CORE_SOURCES = argon2-core.cpp kat.cpp
