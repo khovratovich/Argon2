@@ -99,7 +99,7 @@ argon2-lib:
 
 
 .PHONY: argon2-lib-test
-argon2-lib-test:
+argon2-lib-test: argon2-lib
 	$(CC) $(CFLAGS) \
 		$(TEST_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
