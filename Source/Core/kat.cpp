@@ -16,10 +16,10 @@
 
 
 
-#ifdef KAT
+#ifdef ARGON2_KAT
 
 void InitialKat(const uint8_t* blockhash, const Argon2_Context* context, Argon2_type type) {
-    FILE* fp = fopen(KAT_FILENAME, "a+");
+    FILE* fp = fopen(ARGON2_KAT_FILENAME, "a+");
 
     if (fp && blockhash != NULL && context != NULL) {
         fprintf(fp, "=======================================");
@@ -83,7 +83,7 @@ void InitialKat(const uint8_t* blockhash, const Argon2_Context* context, Argon2_
 
 
         fprintf(fp, "Pre-hashing digest: ");
-        for (unsigned i = 0; i < PREHASH_DIGEST_LENGTH; ++i) {
+        for (unsigned i = 0; i < ARGON2_PREHASH_DIGEST_LENGTH; ++i) {
             fprintf(fp, "%2.2x ", ((unsigned char*) blockhash)[i]);
         }
         fprintf(fp, "\n");
@@ -93,7 +93,7 @@ void InitialKat(const uint8_t* blockhash, const Argon2_Context* context, Argon2_
 }
 
 void PrintTag(const void* out, uint32_t outlen) {
-    FILE* fp = fopen(KAT_FILENAME, "a+");
+    FILE* fp = fopen(ARGON2_KAT_FILENAME, "a+");
 
     if (fp && out != NULL) {
         fprintf(fp, "Tag: ");
@@ -108,14 +108,14 @@ void PrintTag(const void* out, uint32_t outlen) {
 #endif
 
 
-#ifdef KAT_INTERNAL
+#ifdef ARGON2_KAT_INTERNAL
 
 void InternalKat(const Argon2_instance_t* instance, uint32_t pass) {
-    FILE* fp = fopen(KAT_FILENAME, "a+");
+    FILE* fp = fopen(ARGON2_KAT_FILENAME, "a+");
     if (fp && instance != NULL) {
         fprintf(fp, "\n After pass %d:\n", pass);
         for (uint32_t i = 0; i < instance->memory_blocks; ++i) {
-            uint32_t how_many_words = (instance->memory_blocks > WORDS_IN_BLOCK) ? 1 : WORDS_IN_BLOCK;
+            uint32_t how_many_words = (instance->memory_blocks > ARGON2_WORDS_IN_BLOCK) ? 1 : ARGON2_WORDS_IN_BLOCK;
             for (uint32_t j = 0; j < how_many_words; ++j)
                 fprintf(fp, "Block %.4d [%3d]: %016" PRIx64 "\n", i, j, instance->state[i][j]);
         }

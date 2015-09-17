@@ -62,7 +62,7 @@ void GenKat() {
     memset(zero_array, 0, 256);
     memset(one_array, 1, 256);
 
-    for (unsigned m_cost = MIN_MEMORY; m_cost <= 1000; m_cost *= 2) {
+    for (unsigned m_cost = ARGON2_MIN_MEMORY; m_cost <= 1000; m_cost *= 2) {
         for (unsigned p_len = 16; p_len <= 128; p_len += 16) {
             for (unsigned s_len = 8; s_len <= 128; s_len += 16) {
                 for (unsigned thr = 1; thr <= 8; ++thr) {
@@ -235,10 +235,10 @@ void GenerateTestVectors(const std::string &type) {
     memset(secret, 3, secret_length);
     memset(ad, 4, ad_length);
 
-#if defined(KAT) || defined(KAT_INTERNAL)
-    printf("Generate test vectors in file: \"%s\".\n", KAT_FILENAME);
+#if defined(ARGON2_KAT) || defined(ARGON2_KAT_INTERNAL)
+    printf("Generate test vectors in file: \"%s\".\n", ARGON2_KAT_FILENAME);
 #else
-    printf("Enable KAT to generate the test vectors.\n");
+    printf("Enable ARGON2_KAT to generate the test vectors.\n");
 #endif
 
     Argon2_Context context(out, out_length, pwd, pwd_length, salt, salt_length,
@@ -332,8 +332,8 @@ int main(int argc, char* argv[]) {
     //char type[argon2_type_length] = "Argon2d";
     std::string type;
 
-#ifdef KAT
-    remove(KAT_FILENAME);
+#ifdef ARGON2_KAT
+    remove(ARGON2_KAT_FILENAME);
 #endif
 
     if (argc == 1) {
@@ -352,7 +352,7 @@ int main(int argc, char* argv[]) {
             printf("\t -tcost < t_cost : 0..2^24 > \n");
             printf("\t -pwdlen < Password : length>\n");
             printf("\t -saltlen < Salt : Length>\n");
-            printf("\t -threads < Number of threads : % d.. % d>\n", MIN_LANES, MAX_LANES);
+            printf("\t -threads < Number of threads : % d.. % d>\n", ARGON2_MIN_LANES, ARGON2_MAX_LANES);
             printf("\t -type <Argon2d; Argon2di; Argon2ds; Argon2i; Argon2id >\n");
             printf("\t -gen-tv\n");
             printf("\t -verify\n");

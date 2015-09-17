@@ -89,7 +89,7 @@ void FreeMemory(Argon2_instance_t* instance, bool clear) {
     if (instance->state != NULL) {
         if (clear) {
             if (instance->type == Argon2_ds && instance->Sbox != NULL) {
-                secure_wipe_memory(instance->Sbox, SBOX_SIZE * sizeof (uint64_t));
+                secure_wipe_memory(instance->Sbox, ARGON2_SBOX_SIZE * sizeof (uint64_t));
             }
             secure_wipe_memory(instance->state, sizeof (block) * instance->memory_blocks);
         }
@@ -111,9 +111,9 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
         }
 
         // Hash the result
-        blake2b_long(context->out, (uint8_t*) blockhash.v, context->outlen, BLOCK_SIZE);
-        secure_wipe_memory(blockhash.v,  BLOCK_SIZE); //clear the blockhash
-#ifdef KAT
+        blake2b_long(context->out, (uint8_t*) blockhash.v, context->outlen, ARGON2_BLOCK_SIZE);
+        secure_wipe_memory(blockhash.v,  ARGON2_BLOCK_SIZE); //clear the blockhash
+#ifdef ARGON2_KAT
         PrintTag(context->out, context->outlen);
 #endif 
 
@@ -168,7 +168,7 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
     /* 1.2.5 Computing starting position */
     uint32_t start_position = 0;
     if (0 != position->pass) {
-        start_position = (position->slice == SYNC_POINTS - 1) ? 0 : (position->slice + 1) * instance->segment_length;
+        start_position = (position->slice == ARGON2_SYNC_POINTS - 1) ? 0 : (position->slice + 1) * instance->segment_length;
     }
 
     /* 1.2.6. Computing absolute position */
@@ -183,7 +183,7 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
             if (Argon2_ds == instance->type) {
                 GenerateSbox(instance);
             }
-            for (uint8_t s = 0; s < SYNC_POINTS; ++s) {
+            for (uint8_t s = 0; s < ARGON2_SYNC_POINTS; ++s) {
                 for (uint8_t l = 0; l < instance->lanes; ++l) {
                     Threads.push_back(std::thread(FillSegment, instance, Argon2_position_t(r, l, s, 0)));
                 }
@@ -194,7 +194,7 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
                 Threads.clear();
             }
 
-#ifdef KAT_INTERNAL
+#ifdef ARGON2_KAT_INTERNAL
             InternalKat(instance, r);
 #endif
 
@@ -212,10 +212,10 @@ int ValidateInputs(const Argon2_Context* context) {
     }
 
     /* Validate output length */
-    if (MIN_OUTLEN > context->outlen) {
+    if (ARGON2_MIN_OUTLEN > context->outlen) {
         return ARGON2_OUTPUT_TOO_SHORT;
     }
-    if (MAX_OUTLEN < context->outlen) {
+    if (ARGON2_MAX_OUTLEN < context->outlen) {
         return ARGON2_OUTPUT_TOO_LONG;
     }
 
@@ -225,10 +225,10 @@ int ValidateInputs(const Argon2_Context* context) {
             return ARGON2_PWD_PTR_MISMATCH;
         }
     } else {
-        if (MIN_PWD_LENGTH > context->pwdlen) {
+        if (ARGON2_MIN_PWD_LENGTH > context->pwdlen) {
             return ARGON2_PWD_TOO_SHORT;
         }
-        if (MAX_PWD_LENGTH < context->pwdlen) {
+        if (ARGON2_MAX_PWD_LENGTH < context->pwdlen) {
             return ARGON2_PWD_TOO_LONG;
         }
     }
@@ -239,10 +239,10 @@ int ValidateInputs(const Argon2_Context* context) {
             return ARGON2_SALT_PTR_MISMATCH;
         }
     } else {
-        if (MIN_SALT_LENGTH > context->saltlen) {
+        if (ARGON2_MIN_SALT_LENGTH > context->saltlen) {
             return ARGON2_SALT_TOO_SHORT;
         }
-        if (MAX_SALT_LENGTH < context->saltlen) {
+        if (ARGON2_MAX_SALT_LENGTH < context->saltlen) {
             return ARGON2_SALT_TOO_LONG;
         }
     }
@@ -253,10 +253,10 @@ int ValidateInputs(const Argon2_Context* context) {
             return ARGON2_SECRET_PTR_MISMATCH;
         }
     } else {
-        if (MIN_SECRET > context->secretlen) {
+        if (ARGON2_MIN_SECRET > context->secretlen) {
             return ARGON2_SECRET_TOO_SHORT;
         }
-        if (MAX_SECRET < context->secretlen) {
+        if (ARGON2_MAX_SECRET < context->secretlen) {
             return ARGON2_SECRET_TOO_LONG;
         }
     }
@@ -267,35 +267,35 @@ int ValidateInputs(const Argon2_Context* context) {
             return ARGON2_AD_PTR_MISMATCH;
         }
     } else {
-        if (MIN_AD_LENGTH > context->adlen) {
+        if (ARGON2_MIN_AD_LENGTH > context->adlen) {
             return ARGON2_AD_TOO_SHORT;
         }
-        if (MAX_AD_LENGTH < context->adlen) {
+        if (ARGON2_MAX_AD_LENGTH < context->adlen) {
             return ARGON2_AD_TOO_LONG;
         }
     }
 
     /* Validate memory cost */
-    if (MIN_MEMORY > context->m_cost) {
+    if (ARGON2_MIN_MEMORY > context->m_cost) {
         return ARGON2_MEMORY_TOO_LITTLE;
     }
-    if (MAX_MEMORY < context->m_cost) {
+    if (ARGON2_MAX_MEMORY < context->m_cost) {
         return ARGON2_MEMORY_TOO_MUCH;
     }
 
     /* Validate time cost */
-    if (MIN_TIME > context->t_cost) {
+    if (ARGON2_MIN_TIME > context->t_cost) {
         return ARGON2_TIME_TOO_SMALL;
     }
-    if (MAX_TIME < context->t_cost) {
+    if (ARGON2_MAX_TIME < context->t_cost) {
         return ARGON2_TIME_TOO_LARGE;
     }
 
     /* Validate lanes */
-    if (MIN_LANES > context->lanes) {
+    if (ARGON2_MIN_LANES > context->lanes) {
         return ARGON2_LANES_TOO_FEW;
     }
-    if (MAX_LANES < context->lanes) {
+    if (ARGON2_MAX_LANES < context->lanes) {
         return ARGON2_LANES_TOO_MANY;
     }
 
@@ -313,12 +313,12 @@ int ValidateInputs(const Argon2_Context* context) {
 void FillFirstBlocks(uint8_t* blockhash, const Argon2_instance_t* instance) {
     // Make the first and second block in each lane as G(H0||i||0) or G(H0||i||1)
     for (uint8_t l = 0; l < instance->lanes; ++l) {
-        blockhash[PREHASH_DIGEST_LENGTH + 4] = l;
-        blockhash[PREHASH_DIGEST_LENGTH] = 0;
-        blake2b_long((uint8_t*) (instance->state[l * instance->lane_length].v), blockhash, BLOCK_SIZE, PREHASH_SEED_LENGTH);
+        blockhash[ARGON2_PREHASH_DIGEST_LENGTH + 4] = l;
+        blockhash[ARGON2_PREHASH_DIGEST_LENGTH] = 0;
+        blake2b_long((uint8_t*) (instance->state[l * instance->lane_length].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
 
-        blockhash[PREHASH_DIGEST_LENGTH] = 1;
-        blake2b_long((uint8_t*) (instance->state[l * instance->lane_length + 1].v), blockhash, BLOCK_SIZE, PREHASH_SEED_LENGTH);
+        blockhash[ARGON2_PREHASH_DIGEST_LENGTH] = 1;
+        blake2b_long((uint8_t*) (instance->state[l * instance->lane_length + 1].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
     }
 }
 
@@ -330,7 +330,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
         return;
     }
 
-    blake2b_init(&BlakeHash, PREHASH_DIGEST_LENGTH);
+    blake2b_init(&BlakeHash, ARGON2_PREHASH_DIGEST_LENGTH);
 
     store32(&value, context->lanes);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
@@ -344,7 +344,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
     store32(&value, context->t_cost);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
-    store32(&value, VERSION_NUMBER);
+    store32(&value, ARGON2_VERSION_NUMBER);
     blake2b_update(&BlakeHash, (const uint8_t*) &value, sizeof (value));
 
     store32(&value, (uint32_t) type);
@@ -381,7 +381,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
     if (context->ad != NULL) {
         blake2b_update(&BlakeHash, (const uint8_t*) context->ad, context->adlen);
     }
-    blake2b_final(&BlakeHash, blockhash, PREHASH_DIGEST_LENGTH);
+    blake2b_final(&BlakeHash, blockhash, ARGON2_PREHASH_DIGEST_LENGTH);
 }
 
 int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
@@ -390,7 +390,7 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
     // 1. Memory allocation
     int result = ARGON2_OK;
     if (NULL != context->allocate_cbk) {
-        result = context->allocate_cbk((uint8_t **)&(instance->state), instance->memory_blocks * BLOCK_SIZE);
+        result = context->allocate_cbk((uint8_t **)&(instance->state), instance->memory_blocks * ARGON2_BLOCK_SIZE);
     } else {
         result = AllocateMemory(&(instance->state), instance->memory_blocks);
     }
@@ -401,20 +401,20 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
 
     // 2. Initial hashing
     // H_0 + 8 extra bytes to produce the first blocks
-    uint8_t blockhash[PREHASH_SEED_LENGTH];
+    uint8_t blockhash[ARGON2_PREHASH_SEED_LENGTH];
     // Hashing all inputs
     InitialHash(blockhash, context, instance->type);
     // Zeroing 8 extra bytes
-    secure_wipe_memory(blockhash + PREHASH_DIGEST_LENGTH, PREHASH_SEED_LENGTH - PREHASH_DIGEST_LENGTH);
+    secure_wipe_memory(blockhash + ARGON2_PREHASH_DIGEST_LENGTH, ARGON2_PREHASH_SEED_LENGTH - ARGON2_PREHASH_DIGEST_LENGTH);
 
-#ifdef KAT
+#ifdef ARGON2_KAT
     InitialKat(blockhash, context, instance->type);
 #endif
 
     // 3. Creating first blocks, we always have at least two blocks in a slice
     FillFirstBlocks(blockhash, instance);
     // Clearing the hash
-    secure_wipe_memory(blockhash,  PREHASH_SEED_LENGTH);
+    secure_wipe_memory(blockhash,  ARGON2_PREHASH_SEED_LENGTH);
 
     return ARGON2_OK;
 }
@@ -431,12 +431,12 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     /* 2. Align memory size */
     // Minimum memory_blocks = 8L blocks, where L is the number of lanes
     uint32_t memory_blocks = context->m_cost;
-    if (memory_blocks < 2 * SYNC_POINTS * context->lanes) {
-        memory_blocks = 2 * SYNC_POINTS * context->lanes;
+    if (memory_blocks < 2 * ARGON2_SYNC_POINTS * context->lanes) {
+        memory_blocks = 2 * ARGON2_SYNC_POINTS * context->lanes;
     }
-    uint32_t segment_length = memory_blocks / (context->lanes * SYNC_POINTS);
+    uint32_t segment_length = memory_blocks / (context->lanes * ARGON2_SYNC_POINTS);
     // Ensure that all segments have equal length
-    memory_blocks = segment_length * (context->lanes * SYNC_POINTS);
+    memory_blocks = segment_length * (context->lanes * ARGON2_SYNC_POINTS);
     Argon2_instance_t instance(NULL, type, context->t_cost, memory_blocks, context->lanes);
 
     /* 3. Initialization: Hashing inputs, allocating memory, filling first blocks */

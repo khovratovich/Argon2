@@ -15,53 +15,53 @@
 
 
 /************************* Constants to enable Known Answer Tests (KAT)  **************************************************/
-/* Enable KAT */
-//#define KAT
-//#define KAT_INTERNAL
+/* Enable ARGON2_KAT */
+//#define ARGON2_KAT
+//#define ARGON2_KAT_INTERNAL
 
 
-#if defined(KAT) || defined(KAT_INTERNAL)
+#if defined(ARGON2_KAT) || defined(ARGON2_KAT_INTERNAL)
 /* The KAT file name */
-extern const char* KAT_FILENAME;
+extern const char* ARGON2_KAT_FILENAME;
 #endif 
 
 
 /*************************Argon2 input parameter restrictions**************************************************/
 
 /* Minimum and maximum number of lanes (degree of parallelism) */
-const uint8_t MIN_LANES = 1;
-const uint8_t MAX_LANES = 255;
+const uint8_t ARGON2_MIN_LANES = 1;
+const uint8_t ARGON2_MAX_LANES = 255;
 
 /* Number of synchronization points between lanes per pass */
-const uint32_t SYNC_POINTS = 4;
+const uint32_t ARGON2_SYNC_POINTS = 4;
 
 /* Minimum and maximum digest size in bytes */
-const uint32_t MIN_OUTLEN = 4;
-const uint32_t MAX_OUTLEN = 0xFFFFFFFF;
+const uint32_t ARGON2_MIN_OUTLEN = 4;
+const uint32_t ARGON2_MAX_OUTLEN = 0xFFFFFFFF;
 
 /* Minimum and maximum number of memory blocks (each of BLOCK_SIZE bytes) */
-const uint32_t MIN_MEMORY = 2 * SYNC_POINTS; // 2 blocks per slice
-const uint32_t MAX_MEMORY = 0xFFFFFFFF; // 2^32-1 blocks
+const uint32_t ARGON2_MIN_MEMORY = 2 * ARGON2_SYNC_POINTS; // 2 blocks per slice
+const uint32_t ARGON2_MAX_MEMORY = 0xFFFFFFFF; // 2^32-1 blocks
 
 /* Minimum and maximum number of passes */
-const uint32_t MIN_TIME = 1;
-const uint32_t MAX_TIME = 0xFFFFFFFF;
+const uint32_t ARGON2_MIN_TIME = 1;
+const uint32_t ARGON2_MAX_TIME = 0xFFFFFFFF;
 
 /* Minimum and maximum password length in bytes */
-const uint32_t MIN_PWD_LENGTH = 0;
-const uint32_t MAX_PWD_LENGTH = 0xFFFFFFFF;
+const uint32_t ARGON2_MIN_PWD_LENGTH = 0;
+const uint32_t ARGON2_MAX_PWD_LENGTH = 0xFFFFFFFF;
 
 /* Minimum and maximum associated data length in bytes */
-const uint32_t MIN_AD_LENGTH = 0;
-const uint32_t MAX_AD_LENGTH = 0xFFFFFFFF;
+const uint32_t ARGON2_MIN_AD_LENGTH = 0;
+const uint32_t ARGON2_MAX_AD_LENGTH = 0xFFFFFFFF;
 
 /* Minimum and maximum salt length in bytes */
-const uint32_t MIN_SALT_LENGTH = 8;
-const uint32_t MAX_SALT_LENGTH = 0xFFFFFFFF;
+const uint32_t ARGON2_MIN_SALT_LENGTH = 8;
+const uint32_t ARGON2_MAX_SALT_LENGTH = 0xFFFFFFFF;
 
 /* Minimum and maximum key length in bytes */
-const uint32_t MIN_SECRET = 0;
-const uint32_t MAX_SECRET = 0xFFFFFFFF;
+const uint32_t ARGON2_MIN_SECRET = 0;
+const uint32_t ARGON2_MAX_SECRET = 0xFFFFFFFF;
 
 /************************* Error codes *********************************************************************************/
 enum Argon2_ErrorCodes {

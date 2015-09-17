@@ -21,9 +21,9 @@
 #include "blake2.h"
 
 
-#if defined(KAT) || defined(KAT_INTERNAL)
+#if defined(ARGON2_KAT) || defined(ARGON2_KAT_INTERNAL)
 /* The KAT file name */
-const char* KAT_FILENAME = "kat-argon2-ref.log";
+const char* ARGON2_KAT_FILENAME = "kat-argon2-ref.log";
 #endif
 
 
@@ -33,12 +33,12 @@ void FillBlock(const block* prev_block, const block* ref_block, block* next_bloc
 
     uint64_t x = 0;
     if (Sbox != NULL) {
-        x = blockR[0] ^ blockR[WORDS_IN_BLOCK - 1];
+        x = blockR[0] ^ blockR[ARGON2_WORDS_IN_BLOCK - 1];
         for (int i = 0; i < 6 * 16; ++i) {
             uint32_t x1 = x >> 32;
             uint32_t x2 = x & 0xFFFFFFFF;
-            uint64_t y = Sbox[x1 & SBOX_MASK];
-            uint64_t z = Sbox[x2 & SBOX_MASK + SBOX_SIZE / 2];
+            uint64_t y = Sbox[x1 & ARGON2_SBOX_MASK];
+            uint64_t z = Sbox[x2 & ARGON2_SBOX_MASK + ARGON2_SBOX_SIZE / 2];
             x = (uint64_t) x1 * (uint64_t) x2;
             x += y;
             x ^= z;
@@ -63,7 +63,7 @@ void FillBlock(const block* prev_block, const block* ref_block, block* next_bloc
 
     *next_block = blockR ^ block_tmp;
     next_block->v[0] += x;
-    next_block->v[WORDS_IN_BLOCK - 1] += x;
+    next_block->v[ARGON2_WORDS_IN_BLOCK - 1] += x;
 }
 
 void GenerateAddresses(const Argon2_instance_t* instance, const Argon2_position_t* position, uint64_t* pseudo_rands) {
@@ -77,12 +77,12 @@ void GenerateAddresses(const Argon2_instance_t* instance, const Argon2_position_
         input_block.v[5] = instance->type;
 
         for (uint32_t i = 0; i < instance->segment_length; ++i) {
-            if (i % ADDRESSES_IN_BLOCK == 0) {
+            if (i % ARGON2_ADDRESSES_IN_BLOCK == 0) {
                 input_block.v[6]++;
                 FillBlock(&zero_block, &input_block, &address_block, NULL);
                 FillBlock(&zero_block, &address_block, &address_block, NULL);
             }
-            pseudo_rands[i] = address_block[i % ADDRESSES_IN_BLOCK];
+            pseudo_rands[i] = address_block[i % ARGON2_ADDRESSES_IN_BLOCK];
         }
     }
 }
@@ -90,7 +90,7 @@ void GenerateAddresses(const Argon2_instance_t* instance, const Argon2_position_
 void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) {
     uint64_t pseudo_rand, ref_index, ref_lane;
     uint32_t prev_offset, curr_offset;
-	bool data_independent_addressing = (instance->type == Argon2_i) || (instance->type == Argon2_id && (position.pass == 0) && (position.slice < SYNC_POINTS / 2));
+	bool data_independent_addressing = (instance->type == Argon2_i) || (instance->type == Argon2_id && (position.pass == 0) && (position.slice < ARGON2_SYNC_POINTS / 2));
     if (instance != NULL) {
         // Pseudo-random values that determine the reference block position
         uint64_t *pseudo_rands = new uint64_t[instance->segment_length];
@@ -155,11 +155,11 @@ void GenerateSbox(Argon2_instance_t* instance) {
     if (instance == NULL)
         return;
     if (instance->Sbox == NULL)
-        instance->Sbox = new uint64_t[SBOX_SIZE];
+        instance->Sbox = new uint64_t[ARGON2_SBOX_SIZE];
 
-    for (uint32_t i = 0; i < SBOX_SIZE / WORDS_IN_BLOCK; ++i) {
+    for (uint32_t i = 0; i < ARGON2_SBOX_SIZE / ARGON2_WORDS_IN_BLOCK; ++i) {
         FillBlock(&zero_block, &start_block, &out_block, NULL);
         FillBlock(&zero_block, &out_block, &start_block, NULL);
-        memcpy(instance->Sbox + i*WORDS_IN_BLOCK, start_block.v, BLOCK_SIZE);
+        memcpy(instance->Sbox + i*ARGON2_WORDS_IN_BLOCK, start_block.v, ARGON2_BLOCK_SIZE);
     }
 }
