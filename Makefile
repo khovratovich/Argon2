@@ -28,7 +28,7 @@ REF_CORE_SOURCE = argon2-ref-core.cpp
 OPT_CORE_SOURCE = argon2-opt-core.cpp
 
 
-BUILD_DIR = Build
+BUILD_DIR = ./Build
 
 
 LIBNAME=argon2
