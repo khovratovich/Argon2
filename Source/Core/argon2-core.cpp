@@ -84,17 +84,11 @@ static inline void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
 }
 
 void ClearMemory(Argon2_instance_t* instance, bool clear) {
-    if (instance->state != NULL) {
-        if (clear) {
-            if (instance->type == Argon2_ds && instance->Sbox != NULL) {
-                secure_wipe_memory(instance->Sbox, ARGON2_SBOX_SIZE * sizeof (uint64_t));
-            }
-            secure_wipe_memory(instance->state, sizeof (block) * instance->memory_blocks);
+    if (instance->state != NULL && clear) {
+        if (instance->type == Argon2_ds && instance->Sbox != NULL) {
+            secure_wipe_memory(instance->Sbox, ARGON2_SBOX_SIZE * sizeof (uint64_t));
         }
-
-        if (instance->Sbox != NULL) {
-            delete[] instance->Sbox;
-        }
+        secure_wipe_memory(instance->state, sizeof (block) * instance->memory_blocks);
     }
 }
 
@@ -124,6 +118,11 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
 
         // Clear memory
         ClearMemory(instance, context->clear_memory);
+        
+        // Deallocate Sbox memory
+        if (instance->state != NULL && instance->Sbox != NULL) {
+            delete[] instance->Sbox;
+    	}
 
         // Deallocate the memory
         if (NULL != context->free_cbk) {
