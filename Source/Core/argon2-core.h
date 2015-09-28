@@ -109,7 +109,7 @@ struct Argon2_instance_t {
     uint64_t *Sbox; //S-boxes for Argon2_ds
 
     Argon2_instance_t(block* ptr = NULL, Argon2_type t = Argon2_d, uint32_t p = 1, uint32_t m = 8, uint8_t l = 1) :
-    state(ptr), type(t), passes(p), memory_blocks(m), lanes(l), segment_length(m / (l*ARGON2_SYNC_POINTS)), lane_length(m / l), Sbox(NULL) {
+    state(ptr),  passes(p), memory_blocks(m),  segment_length(m / (l*ARGON2_SYNC_POINTS)),  lane_length(m / l), lanes(l),type(t), Sbox(NULL) {
     };
 };
 
@@ -122,7 +122,7 @@ struct Argon2_position_t {
     const uint8_t slice;
     uint32_t index;
 
-    Argon2_position_t(uint32_t p = 0, uint8_t l = 0, uint8_t s = 0, uint32_t i = 0) : pass(p), slice(s), lane(l), index(i) {
+    Argon2_position_t(uint32_t p = 0, uint8_t l = 0, uint8_t s = 0, uint32_t i = 0) : pass(p),  lane(l), slice(s), index(i) {
     };
 };
 

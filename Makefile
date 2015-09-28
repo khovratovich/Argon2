@@ -9,7 +9,7 @@
 
 
 CC = g++ #clang++
-REF_CFLAGS = -std=c++11 -pthread -O3
+REF_CFLAGS = -std=c++11 -pthread -O3 -Wall
 OPT_CFLAGS = -std=c++11 -pthread -O3 -m64 -mavx
 
 

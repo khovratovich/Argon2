@@ -40,6 +40,8 @@ void InitialKat(const uint8_t* blockhash, const Argon2_Context* context, Argon2_
             case Argon2_ds:
                 fprintf(fp, "Argon2ds\n");
                 break;
+	    default:
+		break;
         }
 
         fprintf(fp, "Iterations: %d, Memory: %d KBytes, Parallelism: %d lanes, Tag length: %d bytes\n",
