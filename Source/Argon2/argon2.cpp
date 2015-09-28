@@ -89,10 +89,6 @@ int Argon2i(Argon2_Context* context) {
     return Argon2Core(context, Argon2_i);
 }
 
-int Argon2di(Argon2_Context* context) {
-    return Argon2Core(context, Argon2_di);
-}
-
 int Argon2id(Argon2_Context* context) {
     return Argon2Core(context, Argon2_id);
 }

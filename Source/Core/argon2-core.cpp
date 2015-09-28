@@ -118,11 +118,11 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
 
         // Clear memory
         ClearMemory(instance, context->clear_memory);
-        
+
         // Deallocate Sbox memory
         if (instance->state != NULL && instance->Sbox != NULL) {
             delete[] instance->Sbox;
-    	}
+        }
 
         // Deallocate the memory
         if (NULL != context->free_cbk) {
@@ -232,7 +232,7 @@ int ValidateInputs(const Argon2_Context* context) {
             return ARGON2_PWD_PTR_MISMATCH;
         }
     } else {
-        if (ARGON2_MIN_PWD_LENGTH > context->pwdlen) {
+        if (ARGON2_MIN_PWD_LENGTH != 0 && ARGON2_MIN_PWD_LENGTH > context->pwdlen) {
             return ARGON2_PWD_TOO_SHORT;
         }
         if (ARGON2_MAX_PWD_LENGTH < context->pwdlen) {
@@ -432,8 +432,9 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     if (ARGON2_OK != result) {
         return result;
     }
-    if (type > MAX_ARGON2_TYPE)
+    if (Argon2_d != type && Argon2_i != type && Argon2_id != type && Argon2_ds != type) {
         return ARGON2_INCORRECT_TYPE;
+    }
 
     /* 2. Align memory size */
     // Minimum memory_blocks = 8L blocks, where L is the number of lanes

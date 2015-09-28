@@ -256,11 +256,6 @@ void GenerateTestVectors(const std::string &type) {
         Argon2i(&context);
         return;
     }
-    if (type == std::string("Argon2di")) {
-        printf("Test Argon2di\n");
-        Argon2i(&context);
-        return;
-    }
     if (type == std::string("Argon2ds")) {
         printf("Test Argon2ds\n");
         Argon2ds(&context);
@@ -353,7 +348,7 @@ int main(int argc, char* argv[]) {
             printf("\t -pwdlen < Password : length>\n");
             printf("\t -saltlen < Salt : Length>\n");
             printf("\t -threads < Number of threads : % d.. % d>\n", ARGON2_MIN_LANES, ARGON2_MAX_LANES);
-            printf("\t -type <Argon2d; Argon2di; Argon2ds; Argon2i; Argon2id >\n");
+            printf("\t -type <Argon2d; Argon2ds; Argon2i; Argon2id >\n");
             printf("\t -gen-tv\n");
             printf("\t -verify\n");
             printf("\t -benchmark\n");

@@ -20,37 +20,38 @@ if [ '.' != $script_path ] ; then
 fi
 
 
-ARGON2_TYPES=(Argon2d Argon2i Argon2di Argon2id Argon2ds)
+ARGON2_TYPES=(Argon2d Argon2i Argon2id Argon2ds)
 ARGON2_IMPLEMENTATIONS=(REF OPT)
 
 KAT_REF=kat-argon2-ref.log
 KAT_OPT=kat-argon2-opt.log
 
 
-for type in ${ARGON2_TYPES[@]}
+for implementation in ${ARGON2_IMPLEMENTATIONS[@]}
 do
-	for implementation in ${ARGON2_IMPLEMENTATIONS[@]}
-	do
-		echo "Test for $type $implementation: "
+	echo "Test for $implementation"
 
+	make_log="make_"$implementation".log"
+	rm -f $make_log
 
-		make_log="make_"$type"_"$implementation".log"
+	flags=""
+	if [ "OPT" == "$implementation" ] ; then
+		flags="OPT=TRUE"
+	fi
+
+	make $flags &> $make_log
+
+	if [ 0 -ne $? ] ; then
+		echo -e "\t\t -> Wrong! Make error! See $make_log for details!"
+		continue
+	else
 		rm -f $make_log
+	fi
 
-		flags=""
-		if [ "OPT" == "$implementation" ] ; then
-			flags="OPT=TRUE"
-		fi
 
-		make $flags &> $make_log
-
-		if [ 0 -ne $? ] ; then
-			echo -e "\t -> Wrong! Make error! See $make_log for details!"
-			continue
-		else
-			rm -f $make_log
-		fi
-
+	for type in ${ARGON2_TYPES[@]}
+	do
+		echo -e "\t Test for $type"
 
 		kat_file_name="KAT_"$implementation
 		kat_file=${!kat_file_name}
@@ -59,7 +60,7 @@ do
 		run_log="run_"$type"_"$implementation".log"
 		./Build/argon2-tv -gen-tv -type $type > $run_log
 		if [ 0 -ne $? ] ; then
-			echo -e "\t -> Wrong! Run error! See $run_log for details!"
+			echo -e "\t\t -> Wrong! Run error! See $run_log for details!"
 			continue
 		else
 			rm -f $run_log
@@ -73,9 +74,9 @@ do
 
 
 		if diff -Naur $kat_file $test_vectors_file > $diff_file ; then
-			echo -e "\t -> OK!"
+			echo -e "\t\t -> OK!"
 		else
-			echo -e "\t -> Wrong! See $diff_file for details!"
+			echo -e "\t\t -> Wrong! See $diff_file for details!"
 		fi
 
 	done

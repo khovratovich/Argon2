@@ -36,10 +36,8 @@ const uint32_t ARGON2_PREHASH_SEED_LENGTH = ARGON2_PREHASH_DIGEST_LENGTH + 8;
 enum Argon2_type {
     Argon2_d=0,
     Argon2_i=1,
-    Argon2_di=2,
-    Argon2_id=3,
-    Argon2_ds=4,
-    MAX_ARGON2_TYPE /* Do NOT remove; Do NOT other types after this one */
+    Argon2_id=2,
+    Argon2_ds=4
 };
 
 

@@ -10,7 +10,7 @@
 
 CC = g++ #clang++
 REF_CFLAGS = -std=c++11 -pthread -O3 -Wall
-OPT_CFLAGS = -std=c++11 -pthread -O3 -m64 -mavx
+OPT_CFLAGS = -std=c++11 -pthread -O3 -m64 -mavx -Wall
 
 
 ARGON2_DIR = ./Source/Argon2

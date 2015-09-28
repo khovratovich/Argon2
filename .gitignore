@@ -9,9 +9,6 @@ diff_Argon2d_OPT
 diff_Argon2i_REF
 diff_Argon2i_OPT
 
-diff_Argon2di_REF
-diff_Argon2di_OPT
-
 diff_Argon2id_REF
 diff_Argon2id_OPT
 
@@ -19,20 +16,8 @@ diff_Argon2ds_REF
 diff_Argon2ds_OPT
 
 
-make_Argon2d_REF.log
-make_Argon2d_OPT.log
-
-make_Argon2i_REF.log
-make_Argon2i_OPT.log
-
-make_Argon2di_REF.log
-make_Argon2di_OPT.log
-
-make_Argon2id_REF.log
-make_Argon2id_OPT.log
-
-make_Argon2ds_REF.log
-make_Argon2ds_OPT.log
+make_REF.log
+make_OPT.log
 
 
 run_Argon2d_REF.log
@@ -40,9 +25,6 @@ run_Argon2d_OPT.log
 
 run_Argon2i_REF.log
 run_Argon2i_OPT.log
-
-run_Argon2di_REF.log
-run_Argon2di_OPT.log
 
 run_Argon2id_REF.log
 run_Argon2id_OPT.log
