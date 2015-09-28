@@ -70,7 +70,7 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
             uint32_t x1 = x >> 32;
             uint32_t x2 = x & 0xFFFFFFFF;
             uint64_t y = Sbox[x1 & ARGON2_SBOX_MASK];
-            uint64_t z = Sbox[x2 & ARGON2_SBOX_MASK + ARGON2_SBOX_SIZE / 2];
+            uint64_t z = Sbox[(x2 & ARGON2_SBOX_MASK) + ARGON2_SBOX_SIZE / 2];
             x = (uint64_t) x1 * (uint64_t) x2;
             x += y;
             x ^= z;
@@ -131,7 +131,7 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
         state[i] = _mm_xor_si128(state[i], block_XY[i]);
     }
     state[0] = _mm_add_epi64(state[0], _mm_set_epi64x(0, x));
-    state[ARGON2_QWORDS_IN_BLOCK - 1] = _mm_add_epi64(state[ARGON2_WORDS_IN_BLOCK - 1], _mm_set_epi64x(x, 0));
+    state[ARGON2_QWORDS_IN_BLOCK - 1] = _mm_add_epi64(state[ARGON2_QWORDS_IN_BLOCK - 1], _mm_set_epi64x(x, 0));
     for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         _mm_store_si128((__m128i *) next_block, state[i]);
         next_block += 16;
