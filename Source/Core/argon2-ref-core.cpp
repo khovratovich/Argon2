@@ -88,75 +88,82 @@ void GenerateAddresses(const Argon2_instance_t* instance, const Argon2_position_
 }
 
 void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) {
+    if (instance == NULL) {
+        return;
+    }
     uint64_t pseudo_rand, ref_index, ref_lane;
     uint32_t prev_offset, curr_offset;
-	bool data_independent_addressing = (instance->type == Argon2_i) || (instance->type == Argon2_id && (position.pass == 0) && (position.slice < ARGON2_SYNC_POINTS / 2));
-    if (instance != NULL) {
-        // Pseudo-random values that determine the reference block position
-        uint64_t *pseudo_rands = new uint64_t[instance->segment_length];
-        if (pseudo_rands != NULL) {
-			if (data_independent_addressing) {
-                GenerateAddresses(instance, &position, pseudo_rands);
-            }
-
-            uint32_t starting_index = 0;
-            if ((0 == position.pass) && (0 == position.slice)) {
-                starting_index = 2; // we have already generated the first two blocks
-            }
-
-            // Offset of the current block
-            curr_offset = position.lane * instance->lane_length + position.slice * instance->segment_length + starting_index;
-            if (0 == curr_offset % instance->lane_length) {
-                // Last block in this lane
-                prev_offset = curr_offset + instance->lane_length - 1;
-            } else {
-                // Previous block
-                prev_offset = curr_offset - 1;
-            }
-
-            for (uint32_t i = starting_index; i < instance->segment_length; ++i, ++curr_offset, ++prev_offset) {
-                /*1.1 Rotating prev_offset if needed */
-                if (curr_offset % instance->lane_length == 1) {
-                    prev_offset = curr_offset - 1;
-                }
-
-                /* 1.2 Computing the index of the reference block */
-                /* 1.2.1 Taking pseudo-random value from the previous block */
-				if (data_independent_addressing) {
-                    pseudo_rand = pseudo_rands[i];
-                } else {
-                    pseudo_rand = instance->state[prev_offset][0];
-                }
-
-                /* 1.2.2 Computing the lane of the reference block */
-                ref_lane = ((pseudo_rand >> 32)) % instance->lanes;
-                if ((position.pass == 0) && (position.slice == 0)) {
-                    // Can not reference other lanes yet
-                    ref_lane = position.lane;
-                }
-
-                /* 1.2.3 Computing the number of possible reference block within the lane. */
-                position.index = i;
-                ref_index = IndexAlpha(instance, &position, pseudo_rand & 0xFFFFFFFF, ref_lane == position.lane);
-
-                /* 2 Creating a new block */
-                block* ref_block = instance->state + instance->lane_length * ref_lane + ref_index;
-                block* curr_block = instance->state + curr_offset;
-                FillBlock(instance->state + prev_offset, ref_block, curr_block, instance->Sbox);
-            }
-
-            delete[] pseudo_rands;
-        }
+    bool data_independent_addressing = (instance->type == Argon2_i) || (instance->type == Argon2_id && (position.pass == 0) && (position.slice < ARGON2_SYNC_POINTS / 2));
+    // Pseudo-random values that determine the reference block position
+    uint64_t *pseudo_rands = new uint64_t[instance->segment_length];
+    if (pseudo_rands == NULL){
+        return;
     }
+         
+    if (data_independent_addressing) {
+        GenerateAddresses(instance, &position, pseudo_rands);
+    }
+
+    uint32_t starting_index = 0;
+    if ((0 == position.pass) && (0 == position.slice)) {
+        starting_index = 2; // we have already generated the first two blocks
+    }
+
+    // Offset of the current block
+    curr_offset = position.lane * instance->lane_length + position.slice * instance->segment_length + starting_index;
+    if (0 == curr_offset % instance->lane_length) {
+        // Last block in this lane
+        prev_offset = curr_offset + instance->lane_length - 1;
+    } else {
+        // Previous block
+        prev_offset = curr_offset - 1;
+    }
+
+    for (uint32_t i = starting_index; i < instance->segment_length; ++i, ++curr_offset, ++prev_offset) {
+        /*1.1 Rotating prev_offset if needed */
+        if (curr_offset % instance->lane_length == 1) {
+            prev_offset = curr_offset - 1;
+        }
+
+        /* 1.2 Computing the index of the reference block */
+        /* 1.2.1 Taking pseudo-random value from the previous block */
+        if (data_independent_addressing) {
+            pseudo_rand = pseudo_rands[i];
+        } 
+        else {
+            pseudo_rand = instance->state[prev_offset][0];
+        }
+
+        /* 1.2.2 Computing the lane of the reference block */
+        ref_lane = ((pseudo_rand >> 32)) % instance->lanes;
+        if ((position.pass == 0) && (position.slice == 0)) {
+            // Can not reference other lanes yet
+            ref_lane = position.lane;
+        }
+
+        /* 1.2.3 Computing the number of possible reference block within the lane. */
+        position.index = i;
+        ref_index = IndexAlpha(instance, &position, pseudo_rand & 0xFFFFFFFF, ref_lane == position.lane);
+
+        /* 2 Creating a new block */
+        block* ref_block = instance->state + instance->lane_length * ref_lane + ref_index;
+        block* curr_block = instance->state + curr_offset;
+        FillBlock(instance->state + prev_offset, ref_block, curr_block, instance->Sbox);
+    }
+
+    delete[] pseudo_rands;
 }
+    
 
 void GenerateSbox(Argon2_instance_t* instance) {
-    block zero_block(0), start_block(instance->state[0]), out_block(0);
-    if (instance == NULL)
+    if (instance == NULL){
         return;
-    if (instance->Sbox == NULL)
+    }
+    block zero_block(0), start_block(instance->state[0]), out_block(0);
+    
+    if (instance->Sbox == NULL){
         instance->Sbox = new uint64_t[ARGON2_SBOX_SIZE];
-
+    }
     for (uint32_t i = 0; i < ARGON2_SBOX_SIZE / ARGON2_WORDS_IN_BLOCK; ++i) {
         FillBlock(&zero_block, &start_block, &out_block, NULL);
         FillBlock(&zero_block, &out_block, &start_block, NULL);

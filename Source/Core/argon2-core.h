@@ -59,7 +59,7 @@ struct block {
         
     }
 
-    block(uint8_t in) { 
+    explicit block(uint8_t in) { 
         memset(v, in, ARGON2_BLOCK_SIZE);
     }
 

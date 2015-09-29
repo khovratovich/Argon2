@@ -53,20 +53,22 @@ void CustomFreeMemory(uint8_t *memory, size_t length) {
  * Generate KAT
  */
 void GenKat() {
-    unsigned char out[128];
-    unsigned char zero_array[256];
-    unsigned char one_array[256];
+    const int out_array_len =128;
+    const int in_array_len =256;
+    unsigned char out[out_array_len];
+    unsigned char zero_array[in_array_len];
+    unsigned char one_array[in_array_len];
 
     unsigned t_cost = 3;
 
-    memset(zero_array, 0, 256);
-    memset(one_array, 1, 256);
+    memset(zero_array, 0, in_array_len);
+    memset(one_array, 1, in_array_len);
 
     for (unsigned m_cost = ARGON2_MIN_MEMORY; m_cost <= 1000; m_cost *= 2) {
-        for (unsigned p_len = 16; p_len <= 128; p_len += 16) {
-            for (unsigned s_len = 8; s_len <= 128; s_len += 16) {
+        for (unsigned p_len = 16; p_len <= in_array_len/2; p_len += 16) {
+            for (unsigned s_len = 8; s_len <= in_array_len/2; s_len += 16) {
                 for (unsigned thr = 1; thr <= 8; ++thr) {
-                    for (unsigned outlen = 8; outlen <= 128; outlen *= 4) {
+                    for (unsigned outlen = 8; outlen <= out_array_len; outlen *= 4) {
 #ifdef _MEASURE
                         uint64_t start_cycles, stop_cycles, delta;
                         uint32_t ui2, ui3;
@@ -91,7 +93,7 @@ void GenKat() {
 
                         delta = (stop_cycles - start_cycles) / (m_cost);
                         float mcycles = (float) (stop_cycles - start_cycles) / (1 << 20);
-                        printf("Argon2d+2i:  %d iterations %2.2f cpb %2.2f Mcycles\n", t_cost, (float) delta / 1024, mcycles);
+                        printf("Argon2d+2i:  %u iterations %2.2f cpb %2.2f Mcycles\n", t_cost, (float) delta / 1024, mcycles);
 
                         printf("Tag: ");
                         for (unsigned i = 0; i < outlen; ++i) {
@@ -113,18 +115,16 @@ void GenKat() {
  * Benchmarks Argon2 with salt length 16, password length 32, t_cost 3, and different threads and m_cost
  */
 void Benchmark() {
-    const uint32_t inlen = 32;
+    const uint32_t inlen = 16;
+    const unsigned outlen=16;
+    unsigned char out[outlen];
+    unsigned char pwd_array[inlen];
+    unsigned char salt_array[inlen];
 
-    unsigned char out[32];
-    unsigned char zero_array[inlen];
-    unsigned char one_array[256];
-
-    uint32_t outlen = 16;
-    uint32_t saltlen = 16;
     uint32_t t_cost = 1;
 
-    memset(zero_array, 0, inlen);
-    memset(one_array, 1, 256);
+    memset(pwd_array, 0, inlen);
+    memset(salt_array, 1, inlen);
     std::vector<uint32_t> thread_test = {1, 2, 4, 6, 8, 16};
 
     for (uint32_t m_cost = (uint32_t) 1 << 10; m_cost <= (uint32_t) 1 << 22; m_cost *= 2) {
@@ -138,7 +138,7 @@ void Benchmark() {
             start_cycles = rdtscp(&ui1);
 #endif
 
-            Argon2_Context context(out, outlen, zero_array, inlen, one_array, saltlen, NULL, 0, NULL, 0, t_cost, m_cost, thread_n,NULL,NULL,false,false, false);
+            Argon2_Context context(out, outlen, pwd_array, inlen, salt_array, inlen, NULL, 0, NULL, 0, t_cost, m_cost, thread_n,NULL,NULL,false,false, false);
             Argon2d(&context);
 
 #ifdef _MEASURE
@@ -312,8 +312,7 @@ void VerifyTest(bool modify = false) {
 }
 
 int main(int argc, char* argv[]) {
-    // const unsigned int argon2_type_length = 10;
-
+   
     unsigned char out[32];
 
     uint32_t outlen = 32;
@@ -347,7 +346,7 @@ int main(int argc, char* argv[]) {
             printf("\t -tcost < t_cost : 0..2^24 > \n");
             printf("\t -pwdlen < Password : length>\n");
             printf("\t -saltlen < Salt : Length>\n");
-            printf("\t -threads < Number of threads : % d.. % d>\n", ARGON2_MIN_LANES, ARGON2_MAX_LANES);
+            printf("\t -threads < Number of threads : %u.. %u>\n", ARGON2_MIN_LANES, ARGON2_MAX_LANES);
             printf("\t -type <Argon2d; Argon2ds; Argon2i; Argon2id >\n");
             printf("\t -gen-tv\n");
             printf("\t -verify\n");
@@ -360,7 +359,7 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[i], "-taglength") == 0) {
             if (i < argc - 1) {
                 i++;
-                outlen = atoi(argv[i]) % 32;
+                outlen = ((uint32_t)atoi(argv[i])) % 32;
                 continue;
             }
         }
@@ -368,7 +367,7 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[i], "-logmcost") == 0) {
             if (i < argc - 1) {
                 i++;
-                m_cost = (size_t) 1 << (atoi(argv[i]) % 24);
+                m_cost = (uint8_t) 1 << ((uint8_t)atoi(argv[i]) % 24);
                 continue;
             }
         }
