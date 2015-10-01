@@ -39,7 +39,7 @@ Generate detailed test vectors:
 
 `argon2-tv -gen-tv`
 
-Check test vectors against available test vectors:
+Check generated test vectors against available test vectors:
 
 `./Scripts/check_test_vectors.sh`
 
