@@ -23,6 +23,9 @@ fi
 ARGON2_TYPES=(Argon2d Argon2i Argon2id Argon2ds)
 ARGON2_IMPLEMENTATIONS=(REF OPT)
 
+OUTPUT_PATH=./Output/
+TEST_VECTORS_PATH=./TestVectors/
+
 KAT_REF=kat-argon2-ref.log
 KAT_OPT=kat-argon2-opt.log
 
@@ -31,7 +34,7 @@ for implementation in ${ARGON2_IMPLEMENTATIONS[@]}
 do
 	echo "Test for $implementation"
 
-	make_log="make_"$implementation".log"
+	make_log=$OUTPUT_PATH"make_"$implementation".log"
 	rm -f $make_log
 
 	flags=""
@@ -54,10 +57,10 @@ do
 		echo -e "\t Test for $type"
 
 		kat_file_name="KAT_"$implementation
-		kat_file=${!kat_file_name}
+		kat_file=$OUTPUT_PATH${!kat_file_name}
 		rm -f $kat_file
 
-		run_log="run_"$type"_"$implementation".log"
+		run_log=$OUTPUT_PATH"run_"$type"_"$implementation".log"
 		./Build/argon2-tv -gen-tv -type $type > $run_log
 		if [ 0 -ne $? ] ; then
 			echo -e "\t\t -> Wrong! Run error! See $run_log for details!"
@@ -67,17 +70,22 @@ do
 		fi
 
 
-		test_vectors_file="./TestVectors/"$type".txt"
+		kat_file_copy=${kat_file/"argon2"/$type}
+		cp $kat_file $kat_file_copy
+		rm -f $kat_file
 
-		diff_file="diff_"$type"_"$implementation
+		test_vectors_file=$TEST_VECTORS_PATH$type".txt"
+
+		diff_file=$OUTPUT_PATH"diff_"$type"_"$implementation
 		rm -f $diff_file
 
 
-		if diff -Naur $kat_file $test_vectors_file > $diff_file ; then
+		if diff -Naur $kat_file_copy $test_vectors_file > $diff_file ; then
 			echo -e "\t\t -> OK!"
+			rm -f $kat_file_copy
+			rm -f $diff_file
 		else
 			echo -e "\t\t -> Wrong! See $diff_file for details!"
 		fi
-
 	done
 done

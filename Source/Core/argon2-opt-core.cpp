@@ -32,7 +32,7 @@
 
 #if defined(ARGON2_KAT) || defined(ARGON2_KAT_INTERNAL)
 /* The KAT file name */
-const char* ARGON2_KAT_FILENAME = "kat-argon2-opt.log";
+const char* ARGON2_KAT_FILENAME = "./Output/kat-argon2-opt.log";
 #endif
 
 
