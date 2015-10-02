@@ -179,15 +179,6 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context);
 void Finalize(const Argon2_Context *context, Argon2_instance_t* instance);
 
 
-/*
- * Function fills a new memory block
- * @param prev_block Pointer to the previous block
- * @param ref_block Pointer to the reference block
- * @param next_block Pointer to the block to be constructed
- * @param Sbox Pointer to the Sbox (used in Argon2_ds only)
- * @pre all block pointers must be valid
- */
-void FillBlock(const block* prev_block, const block* ref_block, block* next_block, const uint64_t* Sbox);
 
 /*
  * Function that fills the segment using previous segments also from other threads

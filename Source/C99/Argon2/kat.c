@@ -116,7 +116,7 @@ void InternalKat(const Argon2_instance_t* instance, uint32_t pass) {
         for (uint32_t i = 0; i < instance->memory_blocks; ++i) {
             uint32_t how_many_words = (instance->memory_blocks > ARGON2_WORDS_IN_BLOCK) ? 1 : ARGON2_WORDS_IN_BLOCK;
             for (uint32_t j = 0; j < how_many_words; ++j)
-                fprintf(fp, "Block %.4d [%3d]: %016" PRIx64 "\n", i, j, instance->memory[i][j]);
+                fprintf(fp, "Block %.4d [%3d]: %016" PRIx64 "\n", i, j, instance->memory[i].v[j]);
         }
 
         fclose(fp);

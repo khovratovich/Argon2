@@ -330,7 +330,7 @@ int main(int argc, char* argv[]) {
 
     bool generate_test_vectors = false;
     //char type[argon2_type_length] = "Argon2d";
-    const char* type;
+    const char* type= "Argon2d";
 
 #ifdef ARGON2_KAT
     remove(ARGON2_KAT_FILENAME);
@@ -414,9 +414,6 @@ int i;
             if (i < argc - 1) {
                 i++;
                 type = argv[i];
-                //                      if (argon2_type_length >= strlen(argv[i])) {
-                //                   memcpy(type, argv[i], strlen(argv[i]));
-                //              }
                 continue;
             }
         }
