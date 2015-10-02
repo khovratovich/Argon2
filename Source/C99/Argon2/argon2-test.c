@@ -136,9 +136,9 @@ void Benchmark() {
 
     uint32_t m_cost;
     for (m_cost = (uint32_t) 1 << 10; m_cost <= (uint32_t) 1 << 22; m_cost *= 2) {
-        uint32_t thread_n;
-        for ( thread_n=0; thread_n <sizeof(thread_test); ++thread_n) {
-
+        uint32_t i;
+        for ( i=3; i <sizeof(thread_test); ++i) {
+			uint32_t thread_n = thread_test[i];
 #ifdef _MEASURE
             uint64_t start_cycles, stop_cycles, stop_cycles_i, stop_cycles_di, stop_cycles_ds;
             uint32_t ui1, ui2, ui3, ui4, ui5;
@@ -148,7 +148,7 @@ void Benchmark() {
 #endif
 
             Argon2_Context context = {out, outlen, pwd_array, inlen, salt_array, inlen, 
-                NULL, 0, NULL, 0, t_cost, m_cost, thread_n,NULL,NULL,false,false, false};
+				NULL, 0, NULL, 0, t_cost, m_cost, thread_n, NULL, NULL, false, false, false };
             Argon2d(&context);
 
 #ifdef _MEASURE
