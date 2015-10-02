@@ -15,22 +15,26 @@
 
 #include "time.h"
 #include "argon2.h"
-
+#include "intrin.h"
 
 /* Enable timing measurements */
 #define _MEASURE
 
 static inline uint64_t rdtscp(uint32_t *aux) {
+#ifdef _MSC_VER
+	return __rdtscp(aux);
+#else
     uint64_t rax, rdx;
     __asm volatile ( "rdtscp\n" : "=a" (rax), "=d" (rdx), "=c" (aux) : : );
     return (rdx << 32) + rax;
+#endif
 }
 
 /*
  * Custom allocate memory
  */
 int CustomAllocateMemory(uint8_t **memory, size_t length) {
-    *memory = malloc(length);
+	*memory = (uint8_t*)malloc(length);
     if (!*memory) {
         return ARGON2_MEMORY_ALLOCATION_ERROR;
     }

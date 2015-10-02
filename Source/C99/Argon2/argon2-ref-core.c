@@ -103,7 +103,7 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
     uint32_t prev_offset, curr_offset;
     bool data_independent_addressing = (instance->type == Argon2_i) || (instance->type == Argon2_id && (position.pass == 0) && (position.slice < ARGON2_SYNC_POINTS / 2));
     // Pseudo-random values that determine the reference block position
-    uint64_t *pseudo_rands = malloc(sizeof( uint64_t)*(instance->segment_length));
+	uint64_t *pseudo_rands = (uint64_t*)malloc(sizeof(uint64_t)*(instance->segment_length));
     if (pseudo_rands == NULL){
         return;
     }
@@ -173,7 +173,7 @@ void GenerateSbox(Argon2_instance_t* instance) {
     block out_block  = zero_block;
     
     if (instance->Sbox == NULL){
-        instance->Sbox = malloc( sizeof(uint64_t)*ARGON2_SBOX_SIZE);
+		instance->Sbox = (uint64_t*)malloc(sizeof(uint64_t)*ARGON2_SBOX_SIZE);
     }
     for (uint32_t i = 0; i < ARGON2_SBOX_SIZE / ARGON2_WORDS_IN_BLOCK; ++i) {
         FillBlock(&zero_block, &start_block, &out_block, NULL);
