@@ -257,22 +257,22 @@ void GenerateTestVectors(const char* type) {
             myown_allocator, myown_deallocator,
             clear_password, clear_secret, clear_memory};
 
-    if (strcmp(type,"Argon2d")) {
+    if (strcmp(type,"Argon2d")==0) {
         printf("Test Argon2d\n");
         Argon2d(&context);
         return;
     }
-    if (strcmp(type,"Argon2i")) {
+    if (strcmp(type,"Argon2i")==0) {
         printf("Test Argon2i\n");
         Argon2i(&context);
         return;
     }
-    if (strcmp(type,"Argon2ds")) {
+    if (strcmp(type,"Argon2ds")==0) {
         printf("Test Argon2ds\n");
         Argon2ds(&context);
         return;
     }
-    if (strcmp(type,"Argon2id")) {
+    if (strcmp(type,"Argon2id")==0) {
         printf("Test Argon2id\n");
         Argon2id(&context);
         return;
