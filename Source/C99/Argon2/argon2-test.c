@@ -15,8 +15,9 @@
 
 #include "time.h"
 #include "argon2.h"
+#ifdef _MSC_VER
 #include "intrin.h"
-
+#endif 
 /* Enable timing measurements */
 #define _MEASURE
 
@@ -132,12 +133,12 @@ void Benchmark() {
 
     memset(pwd_array, 0, inlen);
     memset(salt_array, 1, inlen);
-    uint32_t thread_test[] = {1, 2, 4, 6, 8, 16};
+    uint32_t thread_test[6] = {1, 2, 4, 6, 8, 16};
 
     uint32_t m_cost;
     for (m_cost = (uint32_t) 1 << 10; m_cost <= (uint32_t) 1 << 22; m_cost *= 2) {
         uint32_t i;
-        for ( i=3; i <sizeof(thread_test); ++i) {
+        for ( i=0; i <6; ++i) {
 			uint32_t thread_n = thread_test[i];
 #ifdef _MEASURE
             uint64_t start_cycles, stop_cycles, stop_cycles_i, stop_cycles_di, stop_cycles_ds;
