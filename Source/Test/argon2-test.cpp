@@ -23,6 +23,7 @@
 /* Enable timing measurements */
 #define _MEASURE
 
+/*Fixes the cycle count to @aux*/
 static inline uint64_t rdtscp(uint32_t *aux) {
     uint64_t rax, rdx;
     asm volatile ( "rdtscp\n" : "=a" (rax), "=d" (rdx), "=c" (aux) : : );
@@ -30,7 +31,7 @@ static inline uint64_t rdtscp(uint32_t *aux) {
 }
 
 /*
- * Custom allocate memory
+ * Custom allocate memory to @memory of size @length
  */
 int CustomAllocateMemory(uint8_t **memory, size_t length) {
     *memory = new uint8_t[length];
@@ -41,7 +42,7 @@ int CustomAllocateMemory(uint8_t **memory, size_t length) {
 }
 
 /*
- * Custom free memory
+ * Custom free memory at @memory of size @length
  */
 void CustomFreeMemory(uint8_t *memory, size_t length) {
     if (memory) {
@@ -50,7 +51,7 @@ void CustomFreeMemory(uint8_t *memory, size_t length) {
 }
 
 /* 
- * Generate KAT
+ * Run with different memory/passes/threads parameters and password/salt lengths
  */
 void GenKat() {
     const int out_array_len =128;
@@ -93,7 +94,7 @@ void GenKat() {
 
                         delta = (stop_cycles - start_cycles) / (m_cost);
                         float mcycles = (float) (stop_cycles - start_cycles) / (1 << 20);
-                        printf("Argon2d+2i:  %u iterations %2.2f cpb %2.2f Mcycles\n", t_cost, (float) delta / 1024, mcycles);
+                        printf("Argon2d:  %u iterations %2.2f cpb %2.2f Mcycles\n", t_cost, (float) delta / 1024, mcycles);
 
                         printf("Tag: ");
                         for (unsigned i = 0; i < outlen; ++i) {
@@ -177,6 +178,8 @@ void Benchmark() {
     }
 }
 
+/*Call the PHS function with certain parameter values.*/
+
 void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost, uint32_t m_cost) {
 #ifdef _MEASURE
     uint64_t start_cycles, stop_cycles, delta;
@@ -207,6 +210,8 @@ void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost
 #endif
 
 }
+
+/*Generate test vectors of Argon2 of type @type*/
 
 void GenerateTestVectors(const std::string &type) {
     const unsigned out_length = 32;
