@@ -30,6 +30,21 @@ KAT_REF=kat-argon2-ref.log
 KAT_OPT=kat-argon2-opt.log
 
 
+# Parse script arguments
+for i in "$@"
+do
+	case $i in
+		-s=*|-std=*|--standard=*)
+			STANDARD="STD=${i#*=}"
+			shift
+			;;
+		*)
+			# Unknown option
+			;;
+	esac
+done
+
+
 for implementation in ${ARGON2_IMPLEMENTATIONS[@]}
 do
 	echo "Test for $implementation"
@@ -42,7 +57,7 @@ do
 		flags="OPT=TRUE"
 	fi
 
-	make $flags &> $make_log
+	make $STANDARD $flags &> $make_log
 
 	if [ 0 -ne $? ] ; then
 		echo -e "\t\t -> Wrong! Make error! See $make_log for details!"

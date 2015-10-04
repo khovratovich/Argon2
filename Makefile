@@ -8,24 +8,38 @@
 #
 
 
-CC = g++ #clang++
-REF_CFLAGS = -std=c++11 -pthread -O3 -Wall
-OPT_CFLAGS = -std=c++11 -pthread -O3 -m64 -mavx -Wall
+#STD=C++11
+ifeq ($(STD), C++11)
+	CC = g++ #clang++
+	CC_STANDARD = -std=c++11
+
+	SRC_DIR = C++11
+	SRC_EXT = cpp
+else
+	CC = gcc #clang
+	CC_STANDARD = -std=c99
+	
+	SRC_DIR = C99
+	SRC_EXT = c
+endif
+
+REF_CFLAGS = $(CC_STANDARD) -pthread -O3 -Wall
+OPT_CFLAGS = $(CC_STANDARD) -pthread -O3 -m64 -mavx -Wall
 
 
-ARGON2_DIR = ./Source/Argon2
-CORE_DIR = ./Source/Core
+ARGON2_DIR = ./Source/Argon2/$(SRC_DIR)
+CORE_DIR = ./Source/Core/$(SRC_DIR)
 BLAKE2_DIR = ./Source/Blake2
-TEST_DIR = ./Source/Test
+TEST_DIR = ./Source/Test/$(SRC_DIR)
 COMMON_DIR = ./Source/Common
 
-ARGON2_SOURCES = argon2.cpp
-CORE_SOURCES = argon2-core.cpp kat.cpp
-BLAKE2_SOURCES = blake2b-ref.cpp
-TEST_SOURCES = argon2-test.cpp
+ARGON2_SOURCES = argon2.$(SRC_EXT)
+CORE_SOURCES = argon2-core.$(SRC_EXT) kat.$(SRC_EXT)
+BLAKE2_SOURCES = blake2b-ref.c
+TEST_SOURCES = argon2-test.$(SRC_EXT)
 
-REF_CORE_SOURCE = argon2-ref-core.cpp
-OPT_CORE_SOURCE = argon2-opt-core.cpp
+REF_CORE_SOURCE = argon2-ref-core.$(SRC_EXT)
+OPT_CORE_SOURCE = argon2-opt-core.$(SRC_EXT)
 
 
 BUILD_DIR = ./Build
@@ -108,6 +122,11 @@ argon2-lib-test: argon2-lib
 		-Wl,-rpath=$(BUILD_DIR) \
 		-l$(LIBNAME) \
 		-o $(BUILD_DIR)/$@
+
+
+.PHONY: check-tv
+check-tv:
+	./Scripts/check_test_vectors.sh -std=$(STD)
 
 
 .PHONY: clean
