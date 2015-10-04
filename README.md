@@ -35,9 +35,9 @@ Benchmark Argon2d, Argon2id, Argon2i, Argon2ds with different level of paralleli
 
 `argon2 -benchmark`
 
-Generate detailed test vectors:
+Generate detailed test vectors for 'type', where 'type' is one of {Argon2d, Argon2id, Argon2i, Argon2ds}:
 
-`argon2-tv -gen-tv`
+`argon2-tv type -gen-tv`
 
 Check generated test vectors against available test vectors:
 
@@ -45,7 +45,7 @@ Check generated test vectors against available test vectors:
 
 ##Library usage
 
-1. Initialize Argon2_Context structure with`
+1. Initialize Argon2_Context structure with
  - address of output buffer (can not be NULL)
  - output length
  - address of password array
