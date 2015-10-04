@@ -54,8 +54,15 @@ typedef struct _block {
     uint64_t v[ARGON2_WORDS_IN_BLOCK];    
 } block;
 
+/*****************Functions that work with the block******************/
+
+//Initialize each byte of the block with @in
 extern void InitBlockValue(block* b, uint8_t in);
+
+//Copy block @src to block @dst 
 extern void CopyBlock(block* dst, const block* src);
+
+//XOR @src onto @dst bytewise
 extern void XORBlock(block* dst, const block* src);
 
 
@@ -83,9 +90,13 @@ typedef struct _Argon2_position_t {
     const uint8_t lane;
     const uint8_t slice;
     uint32_t index;
-
-   
 }Argon2_position_t;
+
+/*Struct that holds the inputs for thread handling FillSegment*/
+typedef struct _Argon2_thread_data {
+    Argon2_instance_t* instance_ptr;
+    Argon2_position_t position;   
+}Argon2_thread_data;
 
 /*Macro for endianness conversion*/
 
@@ -115,14 +126,8 @@ void ClearMemory(Argon2_instance_t* instance, bool clear);
  */
 void FreeMemory(block* memory);
 
-/*
- * Generate pseudo-random values to reference blocks in the segment and puts them into the array
- * @param instance Pointer to the current instance
- * @param position Pointer to the current position
- * @param pseudo_rands Pointer to the array of 64-bit values
- * @pre pseudo_rands must point to @a instance->segment_length allocated values
- */
-void GenerateAddresses(const Argon2_instance_t* instance, const Argon2_position_t* position, uint64_t* pseudo_rands);
+
+
 
 /*
  * Computes absolute position of reference block in the lane following a skewed distribution and using a pseudo-random value as input
@@ -189,6 +194,13 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance);
 void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position);
 
 /*
+ * Wrapper for FillSegment for <pthread> library
+ * @param thread_data Pointer to the structure that holds inputs for FillSegment
+ * @pre all block pointers must be valid
+ */
+void* FillSegmentThr(void* Argon2_thread_data);
+
+/*
  * Function that fills the entire memory t_cost times based on the first two blocks in each lane
  * @param instance Pointer to the current instance
  */
@@ -202,10 +214,7 @@ void FillMemoryBlocks(Argon2_instance_t* instance);
  */
 int Argon2Core(Argon2_Context* context, Argon2_type type);
 
-/*
- * Generates the Sbox from the first memory block (must be ready at that time)
- * @param instance Pointer to the current instance 
- */
-void GenerateSbox(Argon2_instance_t* instance);
+
+extern void GenerateSbox(Argon2_instance_t* instance);
 
 #endif

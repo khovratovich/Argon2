@@ -22,6 +22,7 @@
 #include <inttypes.h>
 #include "string.h"
 #include "stdlib.h"
+#include "pthread.h"
 
 #include "argon2.h"
 #include "argon2-core.h"
@@ -57,6 +58,7 @@ void InitBlockValue(block* b, uint8_t in){
 void CopyBlock(block* dst, const block* src){
     memcpy(dst->v,src->v,sizeof(uint64_t)*ARGON2_WORDS_IN_BLOCK);
 }
+
  void XORBlock(block* dst, const  block* src){
      int i; 
      for(i=0; i<ARGON2_WORDS_IN_BLOCK; ++i){
@@ -226,23 +228,36 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
 
 void FillMemoryBlocks(Argon2_instance_t* instance) {
     if (instance != NULL) {
-        uint8_t r;
-        for (r = 0; r < instance->passes; ++r) {
+        for (uint8_t r = 0; r < instance->passes; ++r) {
             if (Argon2_ds == instance->type) {
                 GenerateSbox(instance);
             }
-            uint8_t s;
-            for (s = 0; s < ARGON2_SYNC_POINTS; ++s) {
-                uint8_t l;
-                for (l = 0; l < instance->lanes; ++l) {
+            for (uint8_t s = 0; s < ARGON2_SYNC_POINTS; ++s) {
+                /***Thread functionality not added yet*********/
+                //1. Allocating space for threads
+                /*pthread_t* thread = (pthread_t*)malloc(sizeof(pthread_t)*(instance->lanes));
+                pthread_attr_t attr;
+                int rc;
+                void* status;
+                pthread_attr_init(&attr);
+                pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
+                */
+                //2. Calling threads 
+                for (uint8_t l = 0; l < instance->lanes; ++l) {
                     Argon2_position_t position = {r,l,s,0};
-                    /*Threads.push_back(std::thread(*/FillSegment(instance, position);
+                    /*Argon2_thread_data thr_data = {instance,position};
+                    rc =pthread_create(&thread[l],&attr,FillSegmentThr,(void*)&thr_data);*/
+                    FillSegment(instance, position);
                 }
 
-                /*for (auto& t : Threads) {
-                    t.join();
+                //3. Joining
+                /*pthread_attr_destroy(&attr);
+                for (l = 0; l < instance->lanes; ++l) {
+                    rc=pthread_join(thread[l],&status);
+                    if(rc)
+                        printf("Unable to join thread %d: %d\n",l,rc);
                 }
-                Threads.clear();*/
+                free(thread);*/
             }
 
 #ifdef ARGON2_KAT_INTERNAL
@@ -251,6 +266,7 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
 
         }
     }
+    
 }
 
 int ValidateInputs(const Argon2_Context* context) {
@@ -505,4 +521,12 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     Finalize(context, &instance);
 
     return ARGON2_OK;
+}
+
+
+void* FillSegmentThr(void* thread_data)
+{
+    Argon2_thread_data* my_data = (Argon2_thread_data*)thread_data;
+    FillSegment(my_data->instance_ptr, my_data->position);
+    pthread_exit(thread_data);
 }

@@ -23,6 +23,7 @@
 
 #include "argon2.h"
 #include "argon2-core.h"
+#include "argon2-opt-core.h"
 #include "kat.h"
 
 
@@ -42,14 +43,6 @@ const char* ARGON2_KAT_FILENAME = "kat-argon2-opt.log";
 
 __m128i t0, t1;
 
-/*
- * Function fills a new memory block
- * @param state Pointer to the just produced block. Content will be updated(!)
- * @param ref_block Pointer to the reference block
- * @param next_block Pointer to the block to be constructed
- * @param Sbox Pointer to the Sbox (used in Argon2_ds only)
- * @pre all block pointers must be valid
- */
 void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, const uint64_t* Sbox) {
     __m128i block_XY[ARGON2_QWORDS_IN_BLOCK];
     //__m128i state[64];
@@ -166,12 +159,6 @@ void GenerateAddresses(const Argon2_instance_t* instance, const Argon2_position_
     }
 }
 
-/*
- * Function that fills the segment using previous segments also from other threads. Identical to the reference code except that it calls optimized FillBlock()
- * @param instance Pointer to the current instance
- * @param position Current position
- * @pre all block pointers must be valid
- */
 void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) {
  	if (instance == NULL){
 	   return;

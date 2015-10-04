@@ -14,6 +14,7 @@
 
 #include "argon2.h"
 #include "argon2-core.h"
+#include "argon2-ref-core.h"
 #include "kat.h"
 
 
