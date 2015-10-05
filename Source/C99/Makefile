@@ -8,59 +8,48 @@
 #
 
 
-#STD=C++11
-ifeq ($(STD), C++11)
-	CC = g++ #clang++
-	CC_STANDARD = -std=c++11
-
-	SRC_DIR = C++11
-	SRC_EXT = cpp
-else
-	CC = gcc #clang
-	CC_STANDARD = -std=c99
-	
-	SRC_DIR = C99
-	SRC_EXT = c
-endif
-
-REF_CFLAGS = $(CC_STANDARD) -pthread -O3 -Wall
-OPT_CFLAGS = $(CC_STANDARD) -pthread -O3 -m64 -mavx -Wall
+CC = gcc #clang
+REF_CFLAGS = -std=c99 -pthread -O3 -Wall
+OPT_CFLAGS = -std=c99 -pthread -O3 -m64 -mavx -Wall
 
 
-ARGON2_DIR = ./Source/Argon2/$(SRC_DIR)
-CORE_DIR = ./Source/Core/$(SRC_DIR)
-BLAKE2_DIR = ./Source/Blake2
-TEST_DIR = ./Source/Test/$(SRC_DIR)
-COMMON_DIR = ./Source/Common
+ARGON2_DIR = ./Argon2
+BLAKE2_DIR = ./Blake2
+TEST_DIR = ./Test
+COMMON_DIR = ./Common
 
-ARGON2_SOURCES = argon2.$(SRC_EXT)
-CORE_SOURCES = argon2-core.$(SRC_EXT) kat.$(SRC_EXT)
+ARGON2_SOURCES = argon2.c argon2-core.c kat.c
 BLAKE2_SOURCES = blake2b-ref.c
-TEST_SOURCES = argon2-test.$(SRC_EXT)
+TEST_SOURCES = argon2-test.c
 
-REF_CORE_SOURCE = argon2-ref-core.$(SRC_EXT)
-OPT_CORE_SOURCE = argon2-opt-core.$(SRC_EXT)
+REF_SOURCES = argon2-ref-core.c
+OPT_SOURCES = argon2-opt-core.c
 
 
-BUILD_DIR = ./Build
+BUILD_DIR = ./../../Build
 
 
 LIBNAME=argon2
 
 
+SCRIPTS_DIR = ./../../Scripts
+
+
 ARGON2_BUILD_SOURCES = $(addprefix $(ARGON2_DIR)/,$(ARGON2_SOURCES))
-CORE_BUILD_SOURCES = $(addprefix $(CORE_DIR)/,$(CORE_SOURCES))
 BLAKE2_BUILD_SOURCES = $(addprefix $(BLAKE2_DIR)/,$(BLAKE2_SOURCES))
 TEST_BUILD_SOURCES = $(addprefix $(TEST_DIR)/,$(TEST_SOURCES))
+
+
+SRC_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 
 #OPT=TRUE
 ifeq ($(OPT), TRUE)
     CFLAGS=$(OPT_CFLAGS)
-    CORE_BUILD_SOURCES += $(CORE_DIR)/$(OPT_CORE_SOURCE)
+   	ARGON2_BUILD_SOURCES += $(addprefix $(ARGON2_DIR)/,$(OPT_SOURCES))
 else
     CFLAGS=$(REF_CFLAGS)
-    CORE_BUILD_SOURCES += $(CORE_DIR)/$(REF_CORE_SOURCE)
+    ARGON2_BUILD_SOURCES += $(addprefix $(ARGON2_DIR)/,$(REF_SOURCES))
 endif
 
 
@@ -72,11 +61,9 @@ all: cleanall argon2 argon2-tv argon2-lib argon2-lib-test
 argon2:
 	$(CC) $(CFLAGS) \
 		$(ARGON2_BUILD_SOURCES) \
-		$(CORE_BUILD_SOURCES) \
 		$(BLAKE2_BUILD_SOURCES) \
 		$(TEST_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
-		-I$(CORE_DIR) \
 		-I$(BLAKE2_DIR) \
 		-I$(TEST_DIR) \
 		-I$(COMMON_DIR) \
@@ -87,11 +74,9 @@ argon2-tv:
 	$(CC) $(CFLAGS) \
 		-DARGON2_KAT -DARGON2_KAT_INTERNAL \
 		$(ARGON2_BUILD_SOURCES) \
-		$(CORE_BUILD_SOURCES) \
 		$(BLAKE2_BUILD_SOURCES) \
 		$(TEST_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
-		-I$(CORE_DIR) \
 		-I$(BLAKE2_DIR) \
 		-I$(TEST_DIR) \
 		-I$(COMMON_DIR) \
@@ -103,10 +88,8 @@ argon2-lib:
 	$(CC) $(CFLAGS) \
 		-shared -fPIC \
 		$(ARGON2_BUILD_SOURCES) \
-		$(CORE_BUILD_SOURCES) \
 		$(BLAKE2_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
-		-I$(CORE_DIR) \
 		-I$(BLAKE2_DIR) \
 		-I$(COMMON_DIR) \
 		-o $(BUILD_DIR)/lib$(LIBNAME).so
@@ -126,8 +109,7 @@ argon2-lib-test: argon2-lib
 
 .PHONY: check-tv
 check-tv:
-	./Scripts/check_test_vectors.sh -std=$(STD)
-
+	$(SCRIPTS_DIR)/check_test_vectors.sh -src=$(SRC_DIR)
 
 .PHONY: clean
 clean:
@@ -138,7 +120,6 @@ clean:
 cleanall: clean
 	rm -f *~
 	rm -f $(ARGON2_DIR)/*~
-	rm -f $(CORE_DIR)/*~
 	rm -f $(BLAKE2_DIR)/*~
 	rm -f $(TEST_DIR)/*~
 	rm -f $(COMMON_DIR)/*~

@@ -23,8 +23,8 @@ fi
 ARGON2_TYPES=(Argon2d Argon2i Argon2id Argon2ds)
 ARGON2_IMPLEMENTATIONS=(REF OPT)
 
-OUTPUT_PATH=./Output/
-TEST_VECTORS_PATH=./TestVectors/
+OUTPUT_PATH=./../../Output/
+TEST_VECTORS_PATH=./../../TestVectors/
 
 KAT_REF=kat-argon2-ref.log
 KAT_OPT=kat-argon2-opt.log
@@ -34,8 +34,8 @@ KAT_OPT=kat-argon2-opt.log
 for i in "$@"
 do
 	case $i in
-		-s=*|-std=*|--standard=*)
-			STANDARD="STD=${i#*=}"
+		-s=*|-src=*|--source=*)
+			SOURCE_DIR="${i#*=}"
 			shift
 			;;
 		*)
@@ -43,6 +43,10 @@ do
 			;;
 	esac
 done
+
+
+# Change current directory to source directory
+cd $SOURCE_DIR
 
 
 for implementation in ${ARGON2_IMPLEMENTATIONS[@]}
@@ -57,7 +61,7 @@ do
 		flags="OPT=TRUE"
 	fi
 
-	make $STANDARD $flags &> $make_log
+	make $flags &> $make_log
 
 	if [ 0 -ne $? ] ; then
 		echo -e "\t\t -> Wrong! Make error! See $make_log for details!"
@@ -72,11 +76,11 @@ do
 		echo -e "\t Test for $type"
 
 		kat_file_name="KAT_"$implementation
-		kat_file=$OUTPUT_PATH${!kat_file_name}
+		kat_file=${!kat_file_name}
 		rm -f $kat_file
 
 		run_log=$OUTPUT_PATH"run_"$type"_"$implementation".log"
-		./Build/argon2-tv -gen-tv -type $type > $run_log
+		./../../Build/argon2-tv -gen-tv -type $type > $run_log
 		if [ 0 -ne $? ] ; then
 			echo -e "\t\t -> Wrong! Run error! See $run_log for details!"
 			continue
@@ -85,7 +89,7 @@ do
 		fi
 
 
-		kat_file_copy=${kat_file/"argon2"/$type}
+		kat_file_copy=$OUTPUT_PATH/${kat_file/"argon2"/$type}
 		cp $kat_file $kat_file_copy
 		rm -f $kat_file
 
