@@ -23,7 +23,7 @@
 
 #include "argon2.h"
 #include "argon2-core.h"
-#include "argon2-opt-core.h"
+//#include "argon2-opt-core.h"
 #include "kat.h"
 
 
