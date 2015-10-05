@@ -7,21 +7,13 @@ The final winner may be different from the current version (1.2.1).
 
 ## About
 The Argon2 source code package includes:
-* Reference C implementation of password hashing scheme Argon2
+* Reference C/C++ implementation of password hashing scheme Argon2
 
 	`make`
-
-* Reference C++ implementation of password hashing scheme Argon2
-
-	`make STD=C++11`
         
-* Optimized C implementation of password hashing scheme Argon2
+* Optimized C/C++ implementation of password hashing scheme Argon2
 
 	`make OPT=TRUE`
-	
-* Optimized C++ implementation of password hashing scheme Argon2
-
-	`make OPT=TRUE STD=C++11`
 
 Build result:
 * Argon2 without debug messages
