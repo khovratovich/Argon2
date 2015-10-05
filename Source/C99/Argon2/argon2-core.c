@@ -233,31 +233,31 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
                 GenerateSbox(instance);
             }
             for (uint8_t s = 0; s < ARGON2_SYNC_POINTS; ++s) {
-                /***Thread functionality not added yet*********/
                 //1. Allocating space for threads
-                /*pthread_t* thread = (pthread_t*)malloc(sizeof(pthread_t)*(instance->lanes));
+                pthread_t* thread = malloc(sizeof(pthread_t)*(instance->lanes));
+                Argon2_thread_data* thr_data = malloc(sizeof(Argon2_thread_data)*(instance->lanes));
                 pthread_attr_t attr;
                 int rc;
                 void* status;
                 pthread_attr_init(&attr);
                 pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
-                */
+                
                 //2. Calling threads 
                 for (uint8_t l = 0; l < instance->lanes; ++l) {
                     Argon2_position_t position = {r,l,s,0};
-                    /*Argon2_thread_data thr_data = {instance,position};
-                    rc =pthread_create(&thread[l],&attr,FillSegmentThr,(void*)&thr_data);*/
-                    FillSegment(instance, position);
+                    thr_data[l].instance_ptr = instance;//preparing the thread input
+                    memcpy(&(thr_data[l].pos), &position, sizeof(Argon2_position_t));
+                    rc =pthread_create(&thread[l],&attr,FillSegmentThr,(void*)&thr_data[l]);
+                    //FillSegment(instance, position);  //Non-thread equivalent of the lines above
                 }
 
                 //3. Joining
-                /*pthread_attr_destroy(&attr);
-                for (l = 0; l < instance->lanes; ++l) {
+                pthread_attr_destroy(&attr);
+                for (uint8_t l = 0; l < instance->lanes; ++l) {
                     rc=pthread_join(thread[l],&status);
-                    if(rc)
-                        printf("Unable to join thread %d: %d\n",l,rc);
                 }
-                free(thread);*/
+                free(thread);
+                free(thr_data);
             }
 
 #ifdef ARGON2_KAT_INTERNAL
@@ -527,6 +527,6 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
 void* FillSegmentThr(void* thread_data)
 {
     Argon2_thread_data* my_data = (Argon2_thread_data*)thread_data;
-    FillSegment(my_data->instance_ptr, my_data->position);
+    FillSegment(my_data->instance_ptr, my_data->pos);
     pthread_exit(thread_data);
 }

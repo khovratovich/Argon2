@@ -95,7 +95,7 @@ typedef struct _Argon2_position_t {
 /*Struct that holds the inputs for thread handling FillSegment*/
 typedef struct _Argon2_thread_data {
     Argon2_instance_t* instance_ptr;
-    Argon2_position_t position;   
+    Argon2_position_t pos;   
 }Argon2_thread_data;
 
 /*Macro for endianness conversion*/
