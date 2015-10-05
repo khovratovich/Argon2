@@ -35,6 +35,6 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position);
  * Generates the Sbox from the first memory block (must be ready at that time)
  * @param instance Pointer to the current instance 
  */
-void GenerateSbox(Argon2_instance_t* instance)
+void GenerateSbox(Argon2_instance_t* instance);
 #endif	/* ARGON2_REF_CORE_H */
 

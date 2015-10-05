@@ -191,7 +191,7 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance);
  * @param position Current position
  * @pre all block pointers must be valid
  */
-void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position);
+extern void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position);
 
 /*
  * Wrapper for FillSegment for <pthread> library
