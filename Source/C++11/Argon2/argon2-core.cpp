@@ -462,7 +462,7 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     uint32_t segment_length = memory_blocks / (context->lanes * ARGON2_SYNC_POINTS);
     // Ensure that all segments have equal length
     memory_blocks = segment_length * (context->lanes * ARGON2_SYNC_POINTS);
-    Argon2_instance_t instance(NULL, type, context->t_cost, memory_blocks, context->lanes);
+    Argon2_instance_t instance(NULL, type, context->t_cost, memory_blocks, context->lanes, context->threads);
 
     /* 3. Initialization: Hashing inputs, allocating memory, filling first blocks */
     result = Initialize(&instance, context);
