@@ -1,6 +1,8 @@
 /*
  * Argon2 source code package
  * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -84,11 +86,11 @@ static inline void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
 }
 
 void ClearMemory(Argon2_instance_t* instance, bool clear) {
-    if (instance->state != NULL && clear) {
+    if (instance->memory != NULL && clear) {
         if (instance->type == Argon2_ds && instance->Sbox != NULL) {
             secure_wipe_memory(instance->Sbox, ARGON2_SBOX_SIZE * sizeof (uint64_t));
         }
-        secure_wipe_memory(instance->state, sizeof (block) * instance->memory_blocks);
+        secure_wipe_memory(instance->memory, sizeof (block) * instance->memory_blocks);
     }
 }
 
@@ -100,12 +102,12 @@ void FreeMemory(block* memory) {
 
 void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
     if (context != NULL && instance != NULL) {
-        block blockhash = instance->state[instance->lane_length - 1];
+        block blockhash = instance->memory[instance->lane_length - 1];
 
         // XOR the last blocks
-        for (uint8_t l = 1; l < instance->lanes; ++l) {
+        for (uint32_t l = 1; l < instance->lanes; ++l) {
             uint32_t last_block_in_lane = l * instance->lane_length + (instance->lane_length - 1);
-            blockhash ^= instance->state[last_block_in_lane];
+            blockhash ^= instance->memory[last_block_in_lane];
 
         }
 
@@ -120,15 +122,15 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
         ClearMemory(instance, context->clear_memory);
 
         // Deallocate Sbox memory
-        if (instance->state != NULL && instance->Sbox != NULL) {
+        if (instance->memory != NULL && instance->Sbox != NULL) {
             delete[] instance->Sbox;
         }
 
         // Deallocate the memory
         if (NULL != context->free_cbk) {
-            context->free_cbk((uint8_t *) instance->state, instance->memory_blocks * sizeof (block));
+            context->free_cbk((uint8_t *) instance->memory, instance->memory_blocks * sizeof (block));
         } else {
-            FreeMemory(instance->state);
+            FreeMemory(instance->memory);
         }
 
     }
@@ -186,12 +188,12 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
 void FillMemoryBlocks(Argon2_instance_t* instance) {
     std::vector<std::thread> Threads;
     if (instance != NULL) {
-        for (uint8_t r = 0; r < instance->passes; ++r) {
+        for (uint32_t r = 0; r < instance->passes; ++r) {
             if (Argon2_ds == instance->type) {
                 GenerateSbox(instance);
             }
             for (uint8_t s = 0; s < ARGON2_SYNC_POINTS; ++s) {
-                for (uint8_t l = 0; l < instance->lanes; ++l) {
+                for (uint32_t l = 0; l < instance->lanes; ++l) {
                     Threads.push_back(std::thread(FillSegment, instance, Argon2_position_t(r, l, s, 0)));
                 }
 
@@ -319,13 +321,13 @@ int ValidateInputs(const Argon2_Context* context) {
 
 void FillFirstBlocks(uint8_t* blockhash, const Argon2_instance_t* instance) {
     // Make the first and second block in each lane as G(H0||i||0) or G(H0||i||1)
-    for (uint8_t l = 0; l < instance->lanes; ++l) {
-        blockhash[ARGON2_PREHASH_DIGEST_LENGTH + 4] = l;
+    for (uint32_t l = 0; l < instance->lanes; ++l) {
+        store32(blockhash+ARGON2_PREHASH_DIGEST_LENGTH + 4,l);
         blockhash[ARGON2_PREHASH_DIGEST_LENGTH] = 0;
-        blake2b_long((uint8_t*) (instance->state[l * instance->lane_length].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
+        blake2b_long((uint8_t*) (instance->memory[l * instance->lane_length].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
 
         blockhash[ARGON2_PREHASH_DIGEST_LENGTH] = 1;
-        blake2b_long((uint8_t*) (instance->state[l * instance->lane_length + 1].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
+        blake2b_long((uint8_t*) (instance->memory[l * instance->lane_length + 1].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
     }
 }
 
@@ -397,9 +399,9 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
     // 1. Memory allocation
     int result = ARGON2_OK;
     if (NULL != context->allocate_cbk) {
-        result = context->allocate_cbk((uint8_t **)&(instance->state), instance->memory_blocks * ARGON2_BLOCK_SIZE);
+        result = context->allocate_cbk((uint8_t **)&(instance->memory), instance->memory_blocks * ARGON2_BLOCK_SIZE);
     } else {
-        result = AllocateMemory(&(instance->state), instance->memory_blocks);
+        result = AllocateMemory(&(instance->memory), instance->memory_blocks);
     }
 
     if (ARGON2_OK != result) {

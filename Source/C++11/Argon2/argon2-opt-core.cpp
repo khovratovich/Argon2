@@ -1,6 +1,9 @@
 /*
  * Argon2 source code package
  * 
+ *   
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -55,11 +58,11 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
 
 
 
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         block_XY[i] = _mm_load_si128((__m128i *) ref_block);
         ref_block += 16;
     }
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         block_XY[i] = state[i] = _mm_xor_si128(state[i], block_XY[i]);
     }
 
@@ -126,13 +129,13 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
     BLAKE2_ROUND(state[7], state[15], state[23], state[31],
             state[39], state[47], state[55], state[63]);
 
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         // Feedback
         state[i] = _mm_xor_si128(state[i], block_XY[i]);
     }
     state[0] = _mm_add_epi64(state[0], _mm_set_epi64x(0, x));
     state[ARGON2_QWORDS_IN_BLOCK - 1] = _mm_add_epi64(state[ARGON2_QWORDS_IN_BLOCK - 1], _mm_set_epi64x(x, 0));
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         _mm_store_si128((__m128i *) next_block, state[i]);
         next_block += 16;
     }
@@ -199,7 +202,7 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
        // Previous block
        prev_offset = curr_offset - 1;
    }
-   memcpy(state, (uint8_t *) ((instance->state + prev_offset)->v), ARGON2_BLOCK_SIZE);
+   memcpy(state, (uint8_t *) ((instance->memory + prev_offset)->v), ARGON2_BLOCK_SIZE);
    for (uint32_t i = starting_index; i < instance->segment_length; ++i, ++curr_offset, ++prev_offset) {
        /*1.1 Rotating prev_offset if needed */
        if (curr_offset % instance->lane_length == 1) {
@@ -211,7 +214,7 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
        if (data_independent_addressing) {
            pseudo_rand = pseudo_rands[i];
        } else {
-           pseudo_rand = instance->state[prev_offset][0];
+           pseudo_rand = instance->memory[prev_offset][0];
        }
 
        /* 1.2.2 Computing the lane of the reference block */
@@ -226,8 +229,8 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
        ref_index = IndexAlpha(instance, &position, pseudo_rand & 0xFFFFFFFF, ref_lane == position.lane);
 
        /* 2 Creating a new block */
-       block* ref_block = instance->state + instance->lane_length * ref_lane + ref_index;
-       block* curr_block = instance->state + curr_offset;
+       block* ref_block = instance->memory + instance->lane_length * ref_lane + ref_index;
+       block* curr_block = instance->memory + curr_offset;
        FillBlock(state, (uint8_t *) ref_block->v, (uint8_t *) curr_block->v, instance->Sbox);
    }
 
@@ -239,7 +242,7 @@ void GenerateSbox(Argon2_instance_t* instance) {
     if (instance == NULL) {
         return;
     }
-    block start_block(instance->state[0]), out_block(0), zero_block(0);
+    block start_block(instance->memory[0]), out_block(0), zero_block(0);
     
     if (instance->Sbox == NULL) {
         instance->Sbox = new uint64_t[ARGON2_SBOX_SIZE];

@@ -1,6 +1,8 @@
 /*
  * Argon2 source code package
  * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -145,8 +147,7 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
         CopyBlock(&blockhash, instance->memory+ instance->lane_length - 1);
 
         // XOR the last blocks
-        uint8_t l;
-        for (l = 1; l < instance->lanes; ++l) {
+        for (uint32_t l = 1; l < instance->lanes; ++l) {
             uint32_t last_block_in_lane = l * instance->lane_length + (instance->lane_length - 1);
             XORBlock(&blockhash,instance->memory + last_block_in_lane);
 
@@ -228,7 +229,7 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
 
 void FillMemoryBlocks(Argon2_instance_t* instance) {
     if (instance != NULL) {
-        for (uint8_t r = 0; r < instance->passes; ++r) {
+        for (uint32_t r = 0; r < instance->passes; ++r) {
             if (Argon2_ds == instance->type) {
                 GenerateSbox(instance);
             }
@@ -243,7 +244,7 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
                 pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
                 
                 //2. Calling threads 
-                for (uint8_t l = 0; l < instance->lanes; ++l) {
+                for (uint32_t l = 0; l < instance->lanes; ++l) {
                     Argon2_position_t position = {r,l,s,0};
                     thr_data[l].instance_ptr = instance;//preparing the thread input
                     memcpy(&(thr_data[l].pos), &position, sizeof(Argon2_position_t));
@@ -253,7 +254,7 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
 
                 //3. Joining
                 pthread_attr_destroy(&attr);
-                for (uint8_t l = 0; l < instance->lanes; ++l) {
+                for (uint32_t l = 0; l < instance->lanes; ++l) {
                     rc=pthread_join(thread[l],&status);
                 }
                 free(thread);
@@ -379,8 +380,7 @@ int ValidateInputs(const Argon2_Context* context) {
 
 void FillFirstBlocks(uint8_t* blockhash, const Argon2_instance_t* instance) {
     // Make the first and second block in each lane as G(H0||i||0) or G(H0||i||1)
-    uint8_t l;
-    for (l = 0; l < instance->lanes; ++l) {
+    for (uint32_t l = 0; l < instance->lanes; ++l) {
         blockhash[ARGON2_PREHASH_DIGEST_LENGTH + 4] = l;
         blockhash[ARGON2_PREHASH_DIGEST_LENGTH] = 0;
         blake2b_long((uint8_t*) (instance->memory[l * instance->lane_length].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);

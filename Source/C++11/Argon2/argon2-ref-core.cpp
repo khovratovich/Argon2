@@ -1,6 +1,8 @@
 /*
  * Argon2 source code package
- * 
+ *
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ *  
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -131,7 +133,7 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
             pseudo_rand = pseudo_rands[i];
         } 
         else {
-            pseudo_rand = instance->state[prev_offset][0];
+            pseudo_rand = instance->memory[prev_offset][0];
         }
 
         /* 1.2.2 Computing the lane of the reference block */
@@ -146,9 +148,9 @@ void FillSegment(const Argon2_instance_t* instance, Argon2_position_t position) 
         ref_index = IndexAlpha(instance, &position, pseudo_rand & 0xFFFFFFFF, ref_lane == position.lane);
 
         /* 2 Creating a new block */
-        block* ref_block = instance->state + instance->lane_length * ref_lane + ref_index;
-        block* curr_block = instance->state + curr_offset;
-        FillBlock(instance->state + prev_offset, ref_block, curr_block, instance->Sbox);
+        block* ref_block = instance->memory + instance->lane_length * ref_lane + ref_index;
+        block* curr_block = instance->memory + curr_offset;
+        FillBlock(instance->memory + prev_offset, ref_block, curr_block, instance->Sbox);
     }
 
     delete[] pseudo_rands;
@@ -159,7 +161,7 @@ void GenerateSbox(Argon2_instance_t* instance) {
     if (instance == NULL){
         return;
     }
-    block zero_block(0), start_block(instance->state[0]), out_block(0);
+    block zero_block(0), start_block(instance->memory[0]), out_block(0);
     
     if (instance->Sbox == NULL){
         instance->Sbox = new uint64_t[ARGON2_SBOX_SIZE];

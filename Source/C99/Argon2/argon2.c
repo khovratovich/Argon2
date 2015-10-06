@@ -1,6 +1,8 @@
 /*
  * Argon2 source code package
  * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -19,8 +21,8 @@
 /*************************Argon2 input parameter restrictions**************************************************/
 
 /* Minimum and maximum number of lanes (degree of parallelism) */
-const uint8_t ARGON2_MIN_LANES = 1;
-const uint8_t ARGON2_MAX_LANES = 255;
+const uint32_t ARGON2_MIN_LANES = 1;
+const uint32_t ARGON2_MAX_LANES = 0xFFFF;
 
 /* Number of synchronization points between lanes per pass */
 #define __ARGON_SYNC_POINTS 4

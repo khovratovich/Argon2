@@ -1,6 +1,9 @@
 /*
  * Argon2 source code package
- * 
+ *
+ *  * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ *  
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -18,7 +21,7 @@
 /*************************Argon2 internal constants**************************************************/
 
 /* Version of the algorithm */
-const uint8_t ARGON2_VERSION_NUMBER = 0x10;
+const uint32_t ARGON2_VERSION_NUMBER = 0x10;
 
 /* Memory block size in bytes */
 const uint32_t ARGON2_BLOCK_SIZE = 1024;
@@ -63,7 +66,7 @@ struct block {
         memset(v, in, ARGON2_BLOCK_SIZE);
     }
 
-    uint64_t& operator[](const uint8_t i) { //Subscript operator
+    uint64_t& operator[](const uint32_t i) { //Subscript operator
         return v[i];
     }
 
@@ -73,7 +76,7 @@ struct block {
     }
 
     block& operator^=(const block& r) { //Xor-assignment
-        for (uint8_t j = 0; j < ARGON2_WORDS_IN_BLOCK; ++j) {
+        for (uint32_t j = 0; j < ARGON2_WORDS_IN_BLOCK; ++j) {
             v[j] ^= r.v[j];
         }
         return *this;
@@ -97,17 +100,17 @@ block operator^(const block& l, const block& r);
  * Used to evaluate the number and location of blocks to construct in each thread
  */
 struct Argon2_instance_t {
-    block* state; //Memory pointer
+    block* memory; //Memory pointer
     const uint32_t passes; //Number of passes
     const uint32_t memory_blocks; //Number of blocks in memory
     const uint32_t segment_length;
     const uint32_t lane_length;
-    const uint8_t lanes;
+    const uint32_t lanes;
     const Argon2_type type;
     uint64_t *Sbox; //S-boxes for Argon2_ds
 
-    Argon2_instance_t(block* ptr = NULL, Argon2_type t = Argon2_d, uint32_t p = 1, uint32_t m = 8, uint8_t l = 1) :
-    state(ptr),  passes(p), memory_blocks(m),  segment_length(m / (l*ARGON2_SYNC_POINTS)),  lane_length(m / l), lanes(l),type(t), Sbox(NULL) {
+    Argon2_instance_t(block* ptr = NULL, Argon2_type t = Argon2_d, uint32_t p = 1, uint32_t m = 8, uint32_t l = 1) :
+    memory(ptr),  passes(p), memory_blocks(m),  segment_length(m / (l*ARGON2_SYNC_POINTS)),  lane_length(m / l), lanes(l),type(t), Sbox(NULL) {
     };
 };
 
@@ -116,11 +119,11 @@ struct Argon2_instance_t {
  */
 struct Argon2_position_t {
     const uint32_t pass;
-    const uint8_t lane;
+    const uint32_t lane;
     const uint8_t slice;
     uint32_t index;
 
-    Argon2_position_t(uint32_t p = 0, uint8_t l = 0, uint8_t s = 0, uint32_t i = 0) : pass(p),  lane(l), slice(s), index(i) {
+    Argon2_position_t(uint32_t p = 0, uint32_t l = 0, uint8_t s = 0, uint32_t i = 0) : pass(p),  lane(l), slice(s), index(i) {
     };
 };
 
@@ -196,7 +199,7 @@ void FillFirstBlocks(uint8_t* blockhash, const Argon2_instance_t* instance);
  * initialized
  * @param  context  Pointer to the Argon2 internal structure containing memory pointer, and parameters for time and space requirements.
  * @param  instance Current Argon2 instance
- * @return Zero if successful, -1 if memory failed to allocate. @context->state will be modified if successful.
+ * @return Zero if successful, -1 if memory failed to allocate. @context->memory will be modified if successful.
  */
 int Initialize(Argon2_instance_t* instance, Argon2_Context* context);
 
@@ -204,7 +207,7 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context);
  * XORing the last block of each lane, hashing it, making the tag. Deallocates the memory.
  * @param context Pointer to current Argon2 context (use only the out parameters from it)
  * @param instance Pointer to current instance of Argon2
- * @pre instance->state must point to necessary amount of memory
+ * @pre instance->memory must point to necessary amount of memory
  * @pre context->out must point to outlen bytes of memory
  * @pre if context->free_cbk is not NULL, it should point to a function that deallocates memory
  */

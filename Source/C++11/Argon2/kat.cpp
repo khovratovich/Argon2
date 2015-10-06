@@ -1,6 +1,8 @@
 /*
  * Argon2 source code package
  * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -116,7 +118,7 @@ void InternalKat(const Argon2_instance_t* instance, uint32_t pass) {
         for (uint32_t i = 0; i < instance->memory_blocks; ++i) {
             uint32_t how_many_words = (instance->memory_blocks > ARGON2_WORDS_IN_BLOCK) ? 1 : ARGON2_WORDS_IN_BLOCK;
             for (uint32_t j = 0; j < how_many_words; ++j)
-                fprintf(fp, "Block %.4d [%3d]: %016" PRIx64 "\n", i, j, instance->state[i][j]);
+                fprintf(fp, "Block %.4d [%3d]: %016" PRIx64 "\n", i, j, instance->memory[i][j]);
         }
 
         fclose(fp);

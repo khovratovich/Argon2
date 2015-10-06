@@ -1,6 +1,8 @@
 /*
  * Argon2 source code package
  * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -49,11 +51,11 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
 
 
 
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         block_XY[i] = _mm_load_si128((__m128i *) ref_block);
         ref_block += 16;
     }
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         block_XY[i] = state[i] = _mm_xor_si128(state[i], block_XY[i]);
     }
 
@@ -120,13 +122,13 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
     BLAKE2_ROUND(state[7], state[15], state[23], state[31],
             state[39], state[47], state[55], state[63]);
 
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         // Feedback
         state[i] = _mm_xor_si128(state[i], block_XY[i]);
     }
     state[0] = _mm_add_epi64(state[0], _mm_set_epi64x(0, x));
     state[ARGON2_QWORDS_IN_BLOCK - 1] = _mm_add_epi64(state[ARGON2_QWORDS_IN_BLOCK - 1], _mm_set_epi64x(x, 0));
-    for (uint8_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
+    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         _mm_store_si128((__m128i *) next_block, state[i]);
         next_block += 16;
     }

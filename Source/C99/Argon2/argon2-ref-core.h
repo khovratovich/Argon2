@@ -1,3 +1,13 @@
+/*
+ * Argon2 source code package
+ * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
+ * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
+ * 
+ * You should have received a copy of the CC0 Public Domain Dedication along with
+ * this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+ */
 
 #ifndef ARGON2_REF_CORE_H
 #define	ARGON2_REF_CORE_H

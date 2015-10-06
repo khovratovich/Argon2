@@ -1,6 +1,8 @@
 /*
  * Argon2 source code package
  * 
+ * Written by Daniel Dinu and Dmitry Khovratovich, 2015
+ * 
  * This work is licensed under a Creative Commons CC0 1.0 License/Waiver.
  * 
  * You should have received a copy of the CC0 Public Domain Dedication along with
@@ -404,7 +406,7 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[i], "-threads") == 0) {
             if (i < argc - 1) {
                 i++;
-                thread_n = atoi(argv[i]) % 32;
+                thread_n = atoi(argv[i]) % ARGON2_MAX_LANES;
                 continue;
             }
         }
