@@ -106,7 +106,7 @@ struct Argon2_instance_t {
     const uint32_t segment_length;
     const uint32_t lane_length;
     const uint32_t lanes; //Number of lanes
-    const uint32_t threads; //Actual parallelism
+    const uint32_t threads; //Actual parallelism. If @threads > @lanes, no error is reported, just unnecessary threads are not created
     const Argon2_type type;
     uint64_t *Sbox; //S-boxes for Argon2_ds
 

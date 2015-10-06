@@ -114,6 +114,9 @@ enum Argon2_ErrorCodes {
     ARGON2_INCORRECT_TYPE = 26,
 
     ARGON2_OUT_PTR_MISMATCH = 27,
+    
+       ARGON2_THREADS_TOO_FEW = 28,
+    ARGON2_THREADS_TOO_MANY = 29,
 
     ARGON2_ERROR_CODES_LENGTH /* Do NOT remove; Do NOT add error codes after this error code */
 };
@@ -165,7 +168,7 @@ struct Argon2_Context {
     const uint32_t t_cost; //number of passes
     const uint32_t m_cost; //amount of memory requested (KB)
     const uint32_t lanes; //number of lanes (maximum parallelism)
-    const uint32_t threads; //number of threads (actual parallelism)
+    const uint32_t threads; //number of threads (actual parallelism) If @threads > @lanes, no error is reported, just unnecessary threads are not created
 
     AllocateMemoryCallback allocate_cbk; //pointer to memory allocator
     FreeMemoryCallback free_cbk; //pointer to memory deallocator
