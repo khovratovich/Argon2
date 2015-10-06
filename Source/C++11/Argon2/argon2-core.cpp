@@ -323,10 +323,10 @@ void FillFirstBlocks(uint8_t* blockhash, const Argon2_instance_t* instance) {
     // Make the first and second block in each lane as G(H0||i||0) or G(H0||i||1)
     for (uint32_t l = 0; l < instance->lanes; ++l) {
         store32(blockhash+ARGON2_PREHASH_DIGEST_LENGTH + 4,l);
-        blockhash[ARGON2_PREHASH_DIGEST_LENGTH] = 0;
+        store32(blockhash+ARGON2_PREHASH_DIGEST_LENGTH,0);
         blake2b_long((uint8_t*) (instance->memory[l * instance->lane_length].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
 
-        blockhash[ARGON2_PREHASH_DIGEST_LENGTH] = 1;
+        store32(blockhash+ARGON2_PREHASH_DIGEST_LENGTH,1);
         blake2b_long((uint8_t*) (instance->memory[l * instance->lane_length + 1].v), blockhash, ARGON2_BLOCK_SIZE, ARGON2_PREHASH_SEED_LENGTH);
     }
 }

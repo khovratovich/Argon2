@@ -18,7 +18,7 @@
 /*************************Argon2 internal constants**************************************************/
 
 /* Version of the algorithm */
-extern const uint8_t ARGON2_VERSION_NUMBER;
+extern const uint32_t ARGON2_VERSION_NUMBER;
 
 /* Memory block size in bytes */
 #define  ARGON2_BLOCK_SIZE  1024
