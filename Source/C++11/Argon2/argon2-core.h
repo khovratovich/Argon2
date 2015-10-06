@@ -105,12 +105,14 @@ struct Argon2_instance_t {
     const uint32_t memory_blocks; //Number of blocks in memory
     const uint32_t segment_length;
     const uint32_t lane_length;
-    const uint32_t lanes;
+    const uint32_t lanes; //Number of lanes
+    const uint32_t threads; //Actual parallelism
     const Argon2_type type;
     uint64_t *Sbox; //S-boxes for Argon2_ds
 
-    Argon2_instance_t(block* ptr = NULL, Argon2_type t = Argon2_d, uint32_t p = 1, uint32_t m = 8, uint32_t l = 1) :
-    memory(ptr),  passes(p), memory_blocks(m),  segment_length(m / (l*ARGON2_SYNC_POINTS)),  lane_length(m / l), lanes(l),type(t), Sbox(NULL) {
+    Argon2_instance_t(block* ptr = NULL, Argon2_type t = Argon2_d, uint32_t p = 1, uint32_t m = 8, uint32_t l = 1, uint32_t thr=1) :
+    memory(ptr),  passes(p), memory_blocks(m),  segment_length(m / (l*ARGON2_SYNC_POINTS)),  lane_length(m / l), 
+    lanes(l),threads(thr), type(t), Sbox(NULL) {
     };
 };
 

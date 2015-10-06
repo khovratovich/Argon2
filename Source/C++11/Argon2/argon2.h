@@ -32,7 +32,12 @@ extern const char* ARGON2_KAT_FILENAME;
 
 /* Minimum and maximum number of lanes (degree of parallelism) */
 const uint32_t ARGON2_MIN_LANES = 1;
-const uint32_t ARGON2_MAX_LANES = 0xFFFF;
+const uint32_t ARGON2_MAX_LANES = 0xFFFFFF;
+
+/* Minimum and maximum number of threads */
+const uint32_t ARGON2_MIN_THREADS = 1;
+const uint32_t ARGON2_MAX_THREADS = 0xFFFFFF;
+
 
 /* Number of synchronization points between lanes per pass */
 const uint32_t ARGON2_SYNC_POINTS = 4;
@@ -159,7 +164,8 @@ struct Argon2_Context {
 
     const uint32_t t_cost; //number of passes
     const uint32_t m_cost; //amount of memory requested (KB)
-    const uint32_t lanes; //number of parallel threads
+    const uint32_t lanes; //number of lanes (maximum parallelism)
+    const uint32_t threads; //number of threads (actual parallelism)
 
     AllocateMemoryCallback allocate_cbk; //pointer to memory allocator
     FreeMemoryCallback free_cbk; //pointer to memory deallocator
@@ -174,12 +180,13 @@ struct Argon2_Context {
             /*const*/ uint8_t *s, uint32_t slen,
             /*const*/ uint8_t *a, uint32_t alen,
             uint32_t t_c, uint32_t m_c, uint32_t l,
+            uint32_t thr,
             AllocateMemoryCallback a_cbk = NULL, FreeMemoryCallback f_cbk = NULL, bool c_p = true, bool c_s = true, bool c_m = false) : out(o), outlen(olen),
     pwd(m), pwdlen(mlen),
     salt(n), saltlen(nlen),
     secret(s), secretlen(slen),
     ad(a), adlen(alen),
-    t_cost(t_c), m_cost(m_c), lanes(l),
+    t_cost(t_c), m_cost(m_c), lanes(l), threads(thr),
     allocate_cbk(a_cbk), free_cbk(f_cbk), clear_password(c_p), clear_secret(c_s), clear_memory(c_m) {
     }
 };
