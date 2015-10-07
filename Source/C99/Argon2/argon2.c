@@ -13,6 +13,7 @@
 #include "stdint.h" 
 #include "stdbool.h"
 #include <string.h>
+#include "stdio.h"
 
 #include "argon2.h"
 #include "argon2-core.h"
@@ -22,7 +23,11 @@
 
 /* Minimum and maximum number of lanes (degree of parallelism) */
 const uint32_t ARGON2_MIN_LANES = 1;
-const uint32_t ARGON2_MAX_LANES = 0xFFFF;
+const uint32_t ARGON2_MAX_LANES = 0xFFFFFF;
+
+/* Minimum and maximum number of threads */
+const uint32_t ARGON2_MIN_THREADS = 1;
+const uint32_t ARGON2_MAX_THREADS = 0xFFFFFF;
 
 /* Number of synchronization points between lanes per pass */
 #define __ARGON_SYNC_POINTS 4
@@ -122,7 +127,7 @@ int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt
             (uint8_t*) salt, (uint32_t) saltlen,
             default_ad_ptr, default_ad_length,
             default_secret_ptr, default_secret_length,
-            (uint32_t) t_cost, (uint32_t) m_cost, default_parallelism,default_a_cbk,default_f_cbk,
+            (uint32_t) t_cost, (uint32_t) m_cost, default_parallelism,default_parallelism,default_a_cbk,default_f_cbk,
     c_p,c_s,c_m};
 
     return Argon2Core(&context, Argon2_d);

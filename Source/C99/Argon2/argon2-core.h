@@ -78,7 +78,8 @@ typedef struct _Argon2_instance_t {
     const uint32_t memory_blocks; //Number of blocks in memory
     const uint32_t segment_length;
     const uint32_t lane_length;
-    const uint8_t lanes;
+    const uint32_t lanes;
+    const uint32_t threads;
     const Argon2_type type;
     uint64_t *Sbox; //S-boxes for Argon2_ds
 }Argon2_instance_t;
@@ -89,7 +90,7 @@ typedef struct _Argon2_instance_t {
  */
 typedef struct _Argon2_position_t {
     const uint32_t pass;
-    const uint8_t lane;
+    const uint32_t lane;
     const uint8_t slice;
     uint32_t index;
 }Argon2_position_t;

@@ -34,6 +34,9 @@ extern const char* ARGON2_KAT_FILENAME;
 extern const uint32_t ARGON2_MIN_LANES ;
 extern const uint32_t ARGON2_MAX_LANES;
 
+extern const uint32_t ARGON2_MIN_THREADS ;
+extern const uint32_t ARGON2_MAX_THREADS;
+
 /* Number of synchronization points between lanes per pass */
 #define __ARGON_SYNC_POINTS 4
 extern const uint32_t ARGON2_SYNC_POINTS;
@@ -110,6 +113,9 @@ typedef enum _Argon2_ErrorCodes {
     ARGON2_INCORRECT_TYPE = 26,
 
     ARGON2_OUT_PTR_MISMATCH = 27,
+            
+    ARGON2_THREADS_TOO_FEW = 28,
+    ARGON2_THREADS_TOO_MANY = 29,
 
     ARGON2_ERROR_CODES_LENGTH /* Do NOT remove; Do NOT add error codes after this error code */
 } Argon2_ErrorCodes;
@@ -160,7 +166,8 @@ typedef struct _Argon2_Context {
 
     const uint32_t t_cost; //number of passes
     const uint32_t m_cost; //amount of memory requested (KB)
-    const uint32_t lanes; //number of parallel threads
+    const uint32_t lanes; //number of lanes
+    const uint32_t threads; //maximum number of threads
 
     AllocateMemoryCallback allocate_cbk; //pointer to memory allocator
     FreeMemoryCallback free_cbk; //pointer to memory deallocator
