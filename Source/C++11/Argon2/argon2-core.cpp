@@ -37,8 +37,6 @@
 #if defined(__clang__)
 #if __has_attribute(optnone)
 #define NOT_OPTIMIZED __attribute__((optnone))
-#else
-#define NOT_OPTIMIZED
 #endif
 #elif defined(__GNUC__)
 #define GCC_VERSION (__GNUC__ * 10000 \
@@ -47,7 +45,8 @@
 #if GCC_VERSION >= 40400
 #define NOT_OPTIMIZED __attribute__((optimize("O0")))
 #endif
-#else 
+#endif
+#ifndef NOT_OPTIMIZED
 #define NOT_OPTIMIZED
 #endif
 
