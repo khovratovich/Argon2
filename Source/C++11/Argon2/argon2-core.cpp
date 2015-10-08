@@ -194,12 +194,19 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
             for (uint8_t s = 0; s < ARGON2_SYNC_POINTS; ++s) {
                 for (uint32_t l = 0; l < instance->lanes; ++l) {
                     Threads.push_back(std::thread(FillSegment, instance, Argon2_position_t(r, l, s, 0)));
+                    if(instance->threads <= Threads.size()){ //have to join extra threads
+                        for (auto& t : Threads) {
+                            t.join();
+                        }
+                        Threads.clear();
+                    }
                 }
-
-                for (auto& t : Threads) {
-                    t.join();
+                if(!Threads.empty()){
+                    for (auto& t : Threads) {
+                        t.join();
+                    }
+                    Threads.clear();
                 }
-                Threads.clear();
             }
 
 #ifdef ARGON2_KAT_INTERNAL
@@ -305,6 +312,14 @@ int ValidateInputs(const Argon2_Context* context) {
     }
     if (ARGON2_MAX_LANES < context->lanes) {
         return ARGON2_LANES_TOO_MANY;
+    }
+    
+    /* Validate threads */
+    if (ARGON2_MIN_THREADS > context->threads) {
+        return ARGON2_THREADS_TOO_FEW;
+    }
+    if (ARGON2_MAX_THREADS < context->threads) {
+        return ARGON2_THREADS_TOO_MANY;
     }
 
     if (NULL != context->allocate_cbk && NULL == context->free_cbk) {
@@ -446,7 +461,7 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     uint32_t segment_length = memory_blocks / (context->lanes * ARGON2_SYNC_POINTS);
     // Ensure that all segments have equal length
     memory_blocks = segment_length * (context->lanes * ARGON2_SYNC_POINTS);
-    Argon2_instance_t instance(NULL, type, context->t_cost, memory_blocks, context->lanes);
+    Argon2_instance_t instance(NULL, type, context->t_cost, memory_blocks, context->lanes, context->threads);
 
     /* 3. Initialization: Hashing inputs, allocating memory, filling first blocks */
     result = Initialize(&instance, context);

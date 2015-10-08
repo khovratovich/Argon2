@@ -63,7 +63,10 @@ static std::map<Argon2_ErrorCodes, std::string> Argon2_ErrorMessage = {
     {ARGON2_INCORRECT_PARAMETER, "Argon2_Context context is NULL"},
     {ARGON2_INCORRECT_TYPE, "There is no such version of Argon2"},
     
-    {ARGON2_OUT_PTR_MISMATCH, "Output pointer mismatch"}
+    {ARGON2_OUT_PTR_MISMATCH, "Output pointer mismatch"},
+    
+    {ARGON2_THREADS_TOO_FEW, "Too few threads"},
+    {ARGON2_THREADS_TOO_MANY, "Too many threads"},
 };
 
 int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen, unsigned int t_cost, unsigned int m_cost) {
@@ -71,14 +74,14 @@ int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt
     uint32_t default_ad_length = 0;
     uint8_t* default_secret_ptr = NULL;
     uint32_t default_secret_length = 0;
-    uint8_t default_parallelism = 1;
+    uint32_t default_parallelism = 1;
 
     Argon2_Context context((uint8_t*) out, (uint32_t) outlen,
             (uint8_t*) in, (uint32_t) inlen,
             (uint8_t*) salt, (uint32_t) saltlen,
             default_ad_ptr, default_ad_length,
             default_secret_ptr, default_secret_length,
-            (uint32_t) t_cost, (uint32_t) m_cost, default_parallelism);
+            (uint32_t) t_cost, (uint32_t) m_cost, default_parallelism, default_parallelism);
 
     return Argon2Core(&context, Argon2_d);
 }
