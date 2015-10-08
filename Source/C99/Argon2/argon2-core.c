@@ -24,6 +24,7 @@
 #include <inttypes.h>
 #include "string.h"
 #include "stdlib.h"
+#include "stdio.h"
 #include "pthread.h"
 
 #include "argon2.h"
@@ -245,26 +246,40 @@ void FillMemoryBlocks(Argon2_instance_t* instance) {
                 
                 //2. Calling threads 
                 for (uint32_t l = 0; l < instance->lanes; ++l) {
+                    //2.1 Join a thread if limit is exceeded
+                    if(l>=instance->threads){
+                        rc=pthread_join(thread[l-instance->threads],&status);
+                        if (rc) {
+                            printf("ERROR; return code from pthread_join() is %d\n", rc);
+                            exit(-1);
+                        }
+                    }
+                    
+                    //2.2 Create thread
                     Argon2_position_t position = {r,l,s,0};
                     thr_data[l].instance_ptr = instance;//preparing the thread input
                     memcpy(&(thr_data[l].pos), &position, sizeof(Argon2_position_t));
                     rc =pthread_create(&thread[l],&attr,FillSegmentThr,(void*)&thr_data[l]);
+                    
+                    
                     //FillSegment(instance, position);  //Non-thread equivalent of the lines above
                 }
 
-                //3. Joining
-                pthread_attr_destroy(&attr);
-                for (uint32_t l = 0; l < instance->lanes; ++l) {
+                //3. Joining remaining threads
+                for (uint32_t l = instance->lanes - instance->threads; l < instance->lanes; ++l) {
                     rc=pthread_join(thread[l],&status);
+                    if (rc) {
+                        printf("ERROR; return code from pthread_join() is %d\n", rc);
+                        exit(-1);
+                    }
                 }
                 free(thread);
+                pthread_attr_destroy(&attr);
                 free(thr_data);
             }
-
 #ifdef ARGON2_KAT_INTERNAL
             InternalKat(instance, r);
 #endif
-
         }
     }
     
@@ -365,6 +380,14 @@ int ValidateInputs(const Argon2_Context* context) {
     }
     if (ARGON2_MAX_LANES < context->lanes) {
         return ARGON2_LANES_TOO_MANY;
+    }
+    
+    /* Validate threads */
+    if (ARGON2_MIN_THREADS > context->threads) {
+        return ARGON2_THREADS_TOO_FEW;
+    }
+    if (ARGON2_MAX_THREADS < context->threads) {
+        return ARGON2_THREADS_TOO_MANY;
     }
 
     if (NULL != context->allocate_cbk && NULL == context->free_cbk) {
@@ -506,7 +529,8 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     uint32_t segment_length = memory_blocks / (context->lanes * ARGON2_SYNC_POINTS);
     // Ensure that all segments have equal length
     memory_blocks = segment_length * (context->lanes * ARGON2_SYNC_POINTS);
-	Argon2_instance_t instance = { NULL, context->t_cost, memory_blocks, segment_length, segment_length * ARGON2_SYNC_POINTS, context->lanes, type, NULL };
+	Argon2_instance_t instance = { NULL, context->t_cost, memory_blocks, segment_length, 
+        segment_length * ARGON2_SYNC_POINTS, context->lanes, context->threads, type, NULL };
 
     /* 3. Initialization: Hashing inputs, allocating memory, filling first blocks */
     result = Initialize(&instance, context);

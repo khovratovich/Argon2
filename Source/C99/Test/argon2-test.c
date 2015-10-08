@@ -53,73 +53,7 @@ void CustomFreeMemory(uint8_t *memory, size_t length) {
     }
 }
 
-/* 
- * Generate KAT
- */
-void GenKat() {
-    const int out_array_len =128;
-    const int in_array_len =256;
-    unsigned char out[out_array_len];
-    unsigned char zero_array[in_array_len];
-    unsigned char one_array[in_array_len];
 
-    unsigned t_cost = 3;
-
-    memset(zero_array, 0, in_array_len);
-    memset(one_array, 1, in_array_len);
-
-    unsigned m_cost;
-    for ( m_cost = ARGON2_MIN_MEMORY; m_cost <= 1000; m_cost *= 2) {
-        unsigned p_len;
-        for ( p_len = 16; p_len <= in_array_len/2; p_len += 16) {
-            unsigned s_len;
-            for ( s_len = 8; s_len <= in_array_len/2; s_len += 16) {
-                unsigned thr;
-                for ( thr = 1; thr <= 8; ++thr) {
-                    unsigned outlen;
-                    for ( outlen = 8; outlen <= out_array_len; outlen *= 4) {
-#ifdef _MEASURE
-                        uint64_t start_cycles, stop_cycles, delta;
-                        uint32_t ui2, ui3;
-
-                        clock_t start_time = clock();
-                        start_cycles = rdtscp(&ui2);
-#endif
-
-                        //Argon2_Context context(out, outlen, zero_array, p_len, one_array, s_len, NULL, 0, NULL, 0, t_cost, m_cost, thr);
-                        Argon2_Context context={out, outlen, zero_array, p_len, one_array, s_len, NULL, 0, NULL, 0,
-                                t_cost, m_cost, thr, CustomAllocateMemory, CustomFreeMemory, true,true,false};
-                        int result = Argon2d(&context);
-
-                        if (ARGON2_OK != result) {
-                            printf("Error %d: %s\n", result, ErrorMessage(result));
-                            continue;
-                        }
-
-#ifdef _MEASURE
-                        stop_cycles = rdtscp(&ui3);
-                        clock_t stop_time = clock();
-
-                        delta = (stop_cycles - start_cycles) / (m_cost);
-                        float mcycles = (float) (stop_cycles - start_cycles) / (1 << 20);
-                        printf("Argon2d+2i:  %u iterations %2.2f cpb %2.2f Mcycles\n", t_cost, (float) delta / 1024, mcycles);
-
-                        printf("Tag: ");
-                        unsigned i;
-                        for ( i = 0; i < outlen; ++i) {
-                            printf("%2.2x ", ((unsigned char*) out)[i]);
-                        }
-                        printf("\n");
-
-                        float run_time = ((float) stop_time - start_time) / (CLOCKS_PER_SEC);
-                        printf("%2.4f seconds\n", run_time);
-#endif
-                    }
-                }
-            }
-        }
-    }
-}
 
 /*
  * Benchmarks Argon2 with salt length 16, password length 32, t_cost 3, and different threads and m_cost
@@ -151,7 +85,7 @@ void Benchmark() {
 #endif
 
             Argon2_Context context = {out, outlen, pwd_array, inlen, salt_array, inlen, 
-				NULL, 0, NULL, 0, t_cost, m_cost, thread_n, NULL, NULL, false, false, false };
+				NULL, 0, NULL, 0, t_cost, m_cost, thread_n, thread_n, NULL, NULL, false, false, false };
             Argon2d(&context);
 
 #ifdef _MEASURE
@@ -190,7 +124,9 @@ void Benchmark() {
     }
 }
 
-void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost, uint32_t m_cost) {
+/*Call Argon2 with default salt and password and user-defined parameter values.*/
+
+void Run(uint8_t *out, uint32_t t_cost, uint32_t m_cost, uint32_t lanes, uint32_t threads,const char* type) {
 #ifdef _MEASURE
     uint64_t start_cycles, stop_cycles, delta;
     uint32_t ui1, ui2;
@@ -199,14 +135,56 @@ void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost
     start_cycles = rdtscp(&ui1);
 #endif
 
-    unsigned char zero_array[256];
-    unsigned char one_array[256];
+    /*Fixed parameters*/
+    const unsigned out_length = 32;
+    const unsigned pwd_length = 32;
+    const unsigned salt_length = 16;
+    const unsigned secret_length = 8;
+    const unsigned ad_length = 12;
+    bool clear_memory = false;
+    bool clear_secret = false;
+    bool clear_password = false;
+    uint8_t pwd[pwd_length];
+    uint8_t salt[salt_length];
+    uint8_t secret[secret_length];
+    uint8_t ad[ad_length];
+    
+    
 
-    memset(zero_array, 0, 256);
-    memset(one_array, 1, 256);
+    memset(pwd, 1, pwd_length);
+    memset(salt, 2, salt_length);
+    memset(secret, 3, secret_length);
+    memset(ad, 4, ad_length);
 
-    PHS(out, outlen, zero_array, inlen, one_array, saltlen, t_cost, m_cost);
+    Argon2_Context context={out, out_length, pwd, pwd_length, salt, salt_length,
+            secret, secret_length, ad, ad_length, t_cost, m_cost, lanes, lanes,
+            NULL, NULL,
+            clear_password, clear_secret, clear_memory};
 
+    if (strcmp(type,"Argon2d")==0) {
+        printf("Test Argon2d\n");
+        Argon2d(&context);
+        return;
+    }
+    if (strcmp(type,"Argon2i")==0) {
+        printf("Test Argon2i\n");
+        Argon2i(&context);
+        return;
+    }
+    if (strcmp(type,"Argon2ds")==0) {
+        printf("Test Argon2ds\n");
+        Argon2ds(&context);
+        return;
+    }
+    if (strcmp(type,"Argon2id")==0) {
+        printf("Test Argon2id\n");
+        Argon2id(&context);
+        return;
+    }
+
+    printf("Wrong Argon2 type!\n");
+    
+    
 #ifdef _MEASURE
     stop_cycles = rdtscp(&ui2);
     clock_t finish_time = clock();
@@ -218,7 +196,6 @@ void Run(void *out, size_t outlen, size_t inlen, size_t saltlen, uint32_t t_cost
     float run_time = ((float) finish_time - start_time) / (CLOCKS_PER_SEC);
     printf("%2.4f seconds\n", run_time);
 #endif
-
 }
 
 void GenerateTestVectors(const char* type) {
@@ -255,7 +232,7 @@ void GenerateTestVectors(const char* type) {
 #endif
 
     Argon2_Context context={out, out_length, pwd, pwd_length, salt, salt_length,
-            secret, secret_length, ad, ad_length, t_cost, m_cost, lanes,
+            secret, secret_length, ad, ad_length, t_cost, m_cost, lanes, lanes,
             myown_allocator, myown_deallocator,
             clear_password, clear_secret, clear_memory};
 
@@ -283,57 +260,15 @@ void GenerateTestVectors(const char* type) {
     printf("Wrong Argon2 type!\n");
 }
 
-void VerifyTest(bool modify) {
-    const unsigned int out_length = 128;
-    const unsigned int in_length = 256;
-
-    unsigned char out[out_length];
-    unsigned char zero_array1[in_length];
-    unsigned char one_array1[in_length];
-
-    unsigned t_cost = 3;
-    unsigned m_cost = 16;
-    unsigned thread_n = 4;
-
-    memset(zero_array1, 0, in_length);
-    memset(one_array1, 1, in_length);
-
-    unsigned char hash[out_length];
-
-    bool clear_input = false;
-    bool clear_memory = false;
-
-    Argon2_Context context={out, out_length, zero_array1, in_length,
-            one_array1, in_length, NULL, 0, NULL, 0,
-            t_cost, m_cost, thread_n,
-            NULL, NULL,
-            clear_input, clear_input, clear_memory};
-    Argon2d(&context);
-
-    memcpy(hash, context.out, context.outlen <out_length ? context.outlen: out_length);
-
-    if (modify) {
-        // Change the hash value
-        hash[0]++;
-    }
-
-    if (VerifyD(&context, (const char *) hash)) {
-        printf("Password is correct!\n");
-    } else {
-        printf("Password is wrong!\n");
-    }
-}
 
 int main(int argc, char* argv[]) {
    
+   
     unsigned char out[32];
-
-    uint32_t outlen = 32;
     uint32_t m_cost = 1 << 18;
     uint32_t t_cost = 3;
-    uint32_t p_len = 16;
-    unsigned thread_n = 4;
-    uint32_t s_len = 16;
+    uint32_t lanes=4;
+    uint32_t threads = 4;
 
     bool generate_test_vectors = false;
     //char type[argon2_type_length] = "Argon2d";
@@ -343,39 +278,26 @@ int main(int argc, char* argv[]) {
     remove(ARGON2_KAT_FILENAME);
 #endif
 
-    if (argc == 1) {
-        GenKat();
-        return 0;
-    }
-int i;
-    for ( i = 1; i < argc; i++) {
+    
+    for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-help") == 0) {
             printf("====================================== \n");
             printf("Argon2 - test implementation \n");
             printf("====================================== \n");
             printf("Options:\n");
-            printf("\t -taglength <Tag Length: 0..31>\n");
             printf("\t -logmcost < Base 2 logarithm of m_cost : 0..23 > \n");
             printf("\t -tcost < t_cost : 0..2^24 > \n");
-            printf("\t -pwdlen < Password : length>\n");
-            printf("\t -saltlen < Salt : Length>\n");
-            printf("\t -threads < Number of threads : %u.. %u>\n", ARGON2_MIN_LANES, ARGON2_MAX_LANES);
+            printf("\t -lanes < Number of lanes : %u.. %u>\n", ARGON2_MIN_LANES, ARGON2_MAX_LANES);
+            printf("\t -threads < Number of threads : %u.. %u>\n", ARGON2_MIN_THREADS, ARGON2_MAX_THREADS);
             printf("\t -type <Argon2d; Argon2ds; Argon2i; Argon2id >\n");
             printf("\t -gen-tv\n");
-            printf("\t -verify\n");
             printf("\t -benchmark\n");
             printf("\t -help\n");
-            printf("If no arguments given, Argon2 is called with default parameters t_cost=%d, m_cost=%d and threads=%d.\n", t_cost, m_cost, thread_n);
+            printf("If no arguments given, Argon2 is called with default parameters t_cost=%d, "
+                    "m_cost=%d and threads=%d.\n", t_cost, m_cost, threads);
             return 0;
         }
 
-        if (strcmp(argv[i], "-taglength") == 0) {
-            if (i < argc - 1) {
-                i++;
-                outlen = ((uint32_t)atoi(argv[i])) % 32;
-                continue;
-            }
-        }
 
         if (strcmp(argv[i], "-logmcost") == 0) {
             if (i < argc - 1) {
@@ -393,29 +315,22 @@ int i;
             }
         }
 
-        if (strcmp(argv[i], "-pwdlen") == 0) {
-            if (i < argc - 1) {
-                i++;
-                p_len = atoi(argv[i]) % 160;
-                continue;
-            }
-        }
-
-        if (strcmp(argv[i], "-saltlen") == 0) {
-            if (i < argc - 1) {
-                i++;
-                s_len = atoi(argv[i]) % 32;
-                continue;
-            }
-        }
-
         if (strcmp(argv[i], "-threads") == 0) {
             if (i < argc - 1) {
                 i++;
-                thread_n = atoi(argv[i]) % ARGON2_MAX_LANES;
+                threads = atoi(argv[i]) % ARGON2_MAX_THREADS;
                 continue;
             }
         }
+        
+        if (strcmp(argv[i], "-lanes") == 0) {
+            if (i < argc - 1) {
+                i++;
+                lanes = atoi(argv[i]) % ARGON2_MAX_LANES;
+                continue;
+            }
+        }
+
 
         if (strcmp(argv[i], "-type") == 0) {
             if (i < argc - 1) {
@@ -425,23 +340,12 @@ int i;
             }
         }
 
-        if (strcmp(argv[i], "-gen-tv") == 0) {
+          if (strcmp(argv[i], "-gen-tv") == 0) {
             generate_test_vectors = true;
             continue;
         }
 
-        if (strcmp(argv[i], "-verify") == 0) {
-            bool modify = false;
-            if (i < argc - 1) {
-                i++;
-                if (0 != atoi(argv[i])) {
-                    modify = true;
-                }
-            }
 
-            VerifyTest(modify);
-            return 0;
-        }
 
         if (strcmp(argv[i], "-benchmark") == 0) {
             Benchmark();
@@ -453,8 +357,12 @@ int i;
         GenerateTestVectors(type);
         return 0;
     }
+    
+    /*No benchmark, no test vectors, just run*/
+    
+    
 
-    Run(out, outlen, p_len, s_len, t_cost, m_cost);
+    Run(out,  t_cost, m_cost, lanes, threads, type);
 
     return 0;
 }
