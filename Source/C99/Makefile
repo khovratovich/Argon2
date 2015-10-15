@@ -29,7 +29,7 @@ OPT_SOURCES = argon2-opt-core.c
 BUILD_DIR = ./../../Build
 
 
-LIBNAME=argon2
+LIB_NAME=argon2
 
 
 SCRIPTS_DIR = ./../../Scripts
@@ -40,16 +40,32 @@ BLAKE2_BUILD_SOURCES = $(addprefix $(BLAKE2_DIR)/,$(BLAKE2_SOURCES))
 TEST_BUILD_SOURCES = $(addprefix $(TEST_DIR)/,$(TEST_SOURCES))
 
 
+#OPT=TRUE
+ifeq ($(OPT), TRUE)
+	CFLAGS=$(OPT_CFLAGS)
+	ARGON2_BUILD_SOURCES += $(addprefix $(ARGON2_DIR)/,$(OPT_SOURCES))
+else
+	CFLAGS=$(REF_CFLAGS)
+	ARGON2_BUILD_SOURCES += $(addprefix $(ARGON2_DIR)/,$(REF_SOURCES))
+endif
+
+
 SRC_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 
-#OPT=TRUE
-ifeq ($(OPT), TRUE)
-    CFLAGS=$(OPT_CFLAGS)
-   	ARGON2_BUILD_SOURCES += $(addprefix $(ARGON2_DIR)/,$(OPT_SOURCES))
-else
-    CFLAGS=$(REF_CFLAGS)
-    ARGON2_BUILD_SOURCES += $(addprefix $(ARGON2_DIR)/,$(REF_SOURCES))
+BUILD_DIR_PATH := $(shell pwd)/$(BUILD_DIR)
+
+SYSTEM_KERNEL_NAME := $(shell uname -s)
+
+ifeq ($(SYSTEM_KERNEL_NAME), Linux)
+	LIB_EXT := so
+	LIB_CFLAGS := -shared -fPIC
+	LIB_PATH := -Wl,-rpath=$(BUILD_DIR_PATH)
+endif
+ifeq ($(SYSTEM_KERNEL_NAME), Darwin)
+	LIB_EXT := dylib
+	LIB_CFLAGS := -dynamiclib -install_name @rpath/lib$(LIB_NAME).$(LIB_EXT)
+	LIB_PATH := -Xlinker -rpath -Xlinker $(BUILD_DIR_PATH)
 endif
 
 
@@ -86,13 +102,13 @@ argon2-tv:
 .PHONY: argon2-lib
 argon2-lib:
 	$(CC) $(CFLAGS) \
-		-shared -fPIC \
+		$(LIB_CFLAGS) \
 		$(ARGON2_BUILD_SOURCES) \
 		$(BLAKE2_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
 		-I$(BLAKE2_DIR) \
 		-I$(COMMON_DIR) \
-		-o $(BUILD_DIR)/lib$(LIBNAME).so
+		-o $(BUILD_DIR)/lib$(LIB_NAME).$(LIB_EXT)
 
 
 .PHONY: argon2-lib-test
@@ -101,15 +117,16 @@ argon2-lib-test: argon2-lib
 		$(TEST_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
 		-I$(TEST_DIR) \
-		-L$(BUILD_DIR) \
-		-Wl,-rpath=$(BUILD_DIR) \
-		-l$(LIBNAME) \
+		-L$(BUILD_DIR_PATH) \
+		$(LIB_PATH) \
+		-l$(LIB_NAME) \
 		-o $(BUILD_DIR)/$@
 
 
 .PHONY: check-tv
 check-tv:
 	$(SCRIPTS_DIR)/check_test_vectors.sh -src=$(SRC_DIR)
+
 
 .PHONY: clean
 clean:
