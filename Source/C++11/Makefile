@@ -70,25 +70,12 @@ endif
 
 
 .PHONY: all
-all: cleanall argon2 argon2-tv argon2-lib argon2-lib-test
+all: cleanall argon2 argon2-lib argon2-lib-test
 
 
 .PHONY: argon2
 argon2:
 	$(CC) $(CFLAGS) \
-		$(ARGON2_BUILD_SOURCES) \
-		$(BLAKE2_BUILD_SOURCES) \
-		$(TEST_BUILD_SOURCES) \
-		-I$(ARGON2_DIR) \
-		-I$(BLAKE2_DIR) \
-		-I$(TEST_DIR) \
-		-I$(COMMON_DIR) \
-		-o $(BUILD_DIR)/$@
-
-
-argon2-tv:
-	$(CC) $(CFLAGS) \
-		-DARGON2_KAT -DARGON2_KAT_INTERNAL \
 		$(ARGON2_BUILD_SOURCES) \
 		$(BLAKE2_BUILD_SOURCES) \
 		$(TEST_BUILD_SOURCES) \

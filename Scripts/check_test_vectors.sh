@@ -9,6 +9,8 @@
 # this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 #
 
+# Get current dir
+initial_dir=$(pwd)
 
 # Get current script path
 script_path=$(dirname $0)
@@ -29,6 +31,9 @@ TEST_VECTORS_PATH=./../../TestVectors/
 KAT_REF=kat-argon2-ref.log
 KAT_OPT=kat-argon2-opt.log
 
+
+# Default arguments
+SOURCE_DIR=$initial_dir
 
 # Parse script arguments
 for i in "$@"
@@ -80,7 +85,7 @@ do
 		rm -f $kat_file
 
 		run_log=$OUTPUT_PATH"run_"$type"_"$implementation".log"
-		./../../Build/argon2-tv -gen-tv -type $type > $run_log
+		./../../Build/argon2 -gen-tv -type $type > $run_log
 		if [ 0 -ne $? ] ; then
 			echo -e "\t\t -> Wrong! Run error! See $run_log for details!"
 			continue

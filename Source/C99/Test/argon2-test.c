@@ -227,11 +227,7 @@ void GenerateTestVectors(const char* type) {
     memset(secret, 3, secret_length);
     memset(ad, 4, ad_length);
 
-#if defined(ARGON2_KAT) || defined(ARGON2_KAT_INTERNAL)
     printf("Generate test vectors in file: \"%s\".\n", ARGON2_KAT_FILENAME);
-#else
-    printf("Enable ARGON2_KAT to generate the test vectors.\n");
-#endif
 
     Argon2_Context context={out, out_length, pwd, pwd_length, salt, salt_length,
             secret, secret_length, ad, ad_length, t_cost, m_cost, lanes, lanes,
