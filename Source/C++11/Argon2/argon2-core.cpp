@@ -113,9 +113,10 @@ void Finalize(const Argon2_Context *context, Argon2_instance_t* instance) {
         // Hash the result
         blake2b_long(context->out, (uint8_t*) blockhash.v, context->outlen, ARGON2_BLOCK_SIZE);
         secure_wipe_memory(blockhash.v, ARGON2_BLOCK_SIZE); //clear the blockhash
-#ifdef ARGON2_KAT
-        PrintTag(context->out, context->outlen);
-#endif 
+
+        if(context->print){ //Shall we print the output tag?
+            PrintTag(context->out, context->outlen);
+        }
 
         // Clear memory
         ClearMemory(instance, context->clear_memory);
@@ -186,33 +187,32 @@ uint32_t IndexAlpha(const Argon2_instance_t* instance, const Argon2_position_t* 
 
 void FillMemoryBlocks(Argon2_instance_t* instance) {
     std::vector<std::thread> Threads;
-    if (instance != NULL) {
-        for (uint32_t r = 0; r < instance->passes; ++r) {
-            if (Argon2_ds == instance->type) {
-                GenerateSbox(instance);
-            }
-            for (uint8_t s = 0; s < ARGON2_SYNC_POINTS; ++s) {
-                for (uint32_t l = 0; l < instance->lanes; ++l) {
-                    Threads.push_back(std::thread(FillSegment, instance, Argon2_position_t(r, l, s, 0)));
-                    if(instance->threads <= Threads.size()){ //have to join extra threads
-                        for (auto& t : Threads) {
-                            t.join();
-                        }
-                        Threads.clear();
-                    }
-                }
-                if(!Threads.empty()){
+    if (instance == NULL) {
+        return;
+    }
+    for (uint32_t r = 0; r < instance->passes; ++r) {
+        if (Argon2_ds == instance->type) {
+            GenerateSbox(instance);
+        }
+        for (uint8_t s = 0; s < ARGON2_SYNC_POINTS; ++s) {
+            for (uint32_t l = 0; l < instance->lanes; ++l) {
+                Threads.push_back(std::thread(FillSegment, instance, Argon2_position_t(r, l, s, 0)));
+                if(instance->threads <= Threads.size()){ //have to join extra threads
                     for (auto& t : Threads) {
                         t.join();
                     }
                     Threads.clear();
                 }
             }
-
-#ifdef ARGON2_KAT_INTERNAL
-            InternalKat(instance, r);
-#endif
-
+            if(!Threads.empty()){
+                for (auto& t : Threads) {
+                    t.join();
+                }
+                Threads.clear();
+            }
+        }
+        if(instance->internal_print){
+            InternalKat(instance, r); // Print all memory blocks
         }
     }
 }
@@ -410,6 +410,7 @@ void InitialHash(uint8_t* blockhash, Argon2_Context* context, Argon2_type type) 
 int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
     if (instance == NULL || context == NULL)
         return ARGON2_INCORRECT_PARAMETER;
+    
     // 1. Memory allocation
     int result = ARGON2_OK;
     if (NULL != context->allocate_cbk) {
@@ -430,9 +431,9 @@ int Initialize(Argon2_instance_t* instance, Argon2_Context* context) {
     // Zeroing 8 extra bytes
     secure_wipe_memory(blockhash + ARGON2_PREHASH_DIGEST_LENGTH, ARGON2_PREHASH_SEED_LENGTH - ARGON2_PREHASH_DIGEST_LENGTH);
 
-#ifdef ARGON2_KAT
-    InitialKat(blockhash, context, instance->type);
-#endif
+    if(context->print){ //shall we print the current state
+        InitialKat(blockhash, context, instance->type);
+    }
 
     // 3. Creating first blocks, we always have at least two blocks in a slice
     FillFirstBlocks(blockhash, instance);
@@ -461,7 +462,8 @@ int Argon2Core(Argon2_Context* context, Argon2_type type) {
     uint32_t segment_length = memory_blocks / (context->lanes * ARGON2_SYNC_POINTS);
     // Ensure that all segments have equal length
     memory_blocks = segment_length * (context->lanes * ARGON2_SYNC_POINTS);
-    Argon2_instance_t instance(NULL, type, context->t_cost, memory_blocks, context->lanes, context->threads);
+    const bool print_internals = context->print; //Should we print the memory blocks to the file
+    Argon2_instance_t instance(NULL, type, context->t_cost, memory_blocks, context->lanes, context->threads,print_internals);
 
     /* 3. Initialization: Hashing inputs, allocating memory, filling first blocks */
     result = Initialize(&instance, context);

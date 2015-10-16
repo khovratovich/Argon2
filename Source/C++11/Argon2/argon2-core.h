@@ -103,16 +103,18 @@ struct Argon2_instance_t {
     block* memory; //Memory pointer
     const uint32_t passes; //Number of passes
     const uint32_t memory_blocks; //Number of blocks in memory
-    const uint32_t segment_length;
-    const uint32_t lane_length;
     const uint32_t lanes; //Number of lanes
     const uint32_t threads; //Actual parallelism. If @threads > @lanes, no error is reported, just unnecessary threads are not created
-    const Argon2_type type;
+    const Argon2_type type; //Argon2d, 2id, 2i, or 2ds
+    const uint32_t lane_length; //Value derived from @memory_blocks and @lanes  --- just for cache and readability
+    const uint32_t segment_length;  //Value derived from @lane_length and SYNC_POINTS --- just for cache and readability
     uint64_t *Sbox; //S-boxes for Argon2_ds
+    const bool internal_print; //whether to print the memory blocks to the file - for test vectors only!
 
-    Argon2_instance_t(block* ptr, Argon2_type t, uint32_t p, uint32_t m, uint32_t l, uint32_t thr) :
-    memory(ptr),  passes(p), memory_blocks(m),  segment_length(m / (l*ARGON2_SYNC_POINTS)),  lane_length(m / l), 
-    lanes(l),threads(thr), type(t), Sbox(NULL) {
+    Argon2_instance_t(block* ptr, Argon2_type t, uint32_t p, uint32_t m, uint32_t l, uint32_t thr, bool pr) :
+    memory(ptr),  passes(p), memory_blocks(m), lanes(l),threads(thr), type(t),   lane_length(m / l),
+    segment_length(m / (l*ARGON2_SYNC_POINTS)),
+     Sbox(NULL), internal_print(pr) {
     };
 };
 

@@ -17,15 +17,8 @@
 
 
 /************************* Constants to enable Known Answer Tests (KAT)  **************************************************/
-/* Enable ARGON2_KAT */
-//#define ARGON2_KAT
-//#define ARGON2_KAT_INTERNAL
 
-
-#if defined(ARGON2_KAT) || defined(ARGON2_KAT_INTERNAL)
-/* The KAT file name */
 extern const char* ARGON2_KAT_FILENAME;
-#endif 
 
 
 /*************************Argon2 input parameter restrictions**************************************************/
@@ -175,7 +168,9 @@ struct Argon2_Context {
 
     const bool clear_password; //whether to clear the password array
     const bool clear_secret; //whether to clear the secret array
-    const bool clear_memory; //whether to clear the memory after the run
+    const bool clear_memory; //whether to clear the memory after the run 
+    
+    const bool print; //whether to print the starting variables and the tag to the file - for test vectors only!
 
     Argon2_Context(uint8_t *o, uint32_t olen,
             /*const*/ uint8_t *m, uint32_t mlen,
@@ -184,13 +179,14 @@ struct Argon2_Context {
             /*const*/ uint8_t *a, uint32_t alen,
             uint32_t t_c, uint32_t m_c, uint32_t l,
             uint32_t thr,
-            AllocateMemoryCallback a_cbk = NULL, FreeMemoryCallback f_cbk = NULL, bool c_p = true, bool c_s = true, bool c_m = false) : out(o), outlen(olen),
+            AllocateMemoryCallback a_cbk, FreeMemoryCallback f_cbk, bool c_p, bool c_s, bool c_m, bool p) : out(o), outlen(olen),
     pwd(m), pwdlen(mlen),
     salt(n), saltlen(nlen),
     secret(s), secretlen(slen),
     ad(a), adlen(alen),
     t_cost(t_c), m_cost(m_c), lanes(l), threads(thr),
-    allocate_cbk(a_cbk), free_cbk(f_cbk), clear_password(c_p), clear_secret(c_s), clear_memory(c_m) {
+    allocate_cbk(a_cbk), free_cbk(f_cbk), 
+    clear_password(c_p), clear_secret(c_s), clear_memory(c_m), print(p) {
     }
 };
 
@@ -207,7 +203,7 @@ struct Argon2_Context {
  * @pre    @a saltlen must be at least @saltlen bytes long
  * @return Zero if successful, 1 otherwise.
  */
-extern "C" int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
+extern  int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
         unsigned int t_cost, unsigned int m_cost);
 
 /*

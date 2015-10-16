@@ -75,13 +75,24 @@ int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt
     uint8_t* default_secret_ptr = NULL;
     uint32_t default_secret_length = 0;
     uint32_t default_parallelism = 1;
+    
+    const bool clear_password=true; 
+    const bool clear_secret=false; 
+    const bool clear_memory=false; 
+    
+    const bool print_internals=false;
+    
+    const AllocateMemoryCallback own_allocator=NULL;
+    const FreeMemoryCallback own_deallocator=NULL;
+    
 
     Argon2_Context context((uint8_t*) out, (uint32_t) outlen,
             (uint8_t*) in, (uint32_t) inlen,
             (uint8_t*) salt, (uint32_t) saltlen,
             default_ad_ptr, default_ad_length,
             default_secret_ptr, default_secret_length,
-            (uint32_t) t_cost, (uint32_t) m_cost, default_parallelism, default_parallelism);
+            (uint32_t) t_cost, (uint32_t) m_cost, default_parallelism, default_parallelism, own_allocator, 
+            own_deallocator,clear_password, clear_secret,clear_memory, print_internals);
 
     return Argon2Core(&context, Argon2_d);
 }

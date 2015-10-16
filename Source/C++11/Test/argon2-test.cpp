@@ -81,7 +81,7 @@ void Benchmark() {
 #endif
 
             Argon2_Context context(out, outlen, pwd_array, inlen, salt_array, inlen, NULL, 0, NULL, 0, 
-                    t_cost, m_cost, thread_n, thread_n,NULL,NULL,false,false, false);
+                    t_cost, m_cost, thread_n, thread_n,NULL,NULL,false,false, false,false);
             Argon2d(&context);
 
 #ifdef _MEASURE
@@ -122,7 +122,8 @@ void Benchmark() {
 
 /*Call Argon2 with default salt and password and user-defined parameter values.*/
 
-void Run(uint8_t *out, uint32_t t_cost, uint32_t m_cost, uint32_t lanes, uint32_t threads,const std::string& type) {
+void Run(uint8_t *out, uint32_t t_cost, uint32_t m_cost, uint32_t lanes, uint32_t threads,const std::string& type,
+        bool print_internals) {
 #ifdef _MEASURE
     uint64_t start_cycles, stop_cycles, delta;
     uint32_t ui1, ui2;
@@ -156,7 +157,7 @@ void Run(uint8_t *out, uint32_t t_cost, uint32_t m_cost, uint32_t lanes, uint32_
     Argon2_Context context(out, out_length, pwd, pwd_length, salt, salt_length,
             secret, secret_length, ad, ad_length, t_cost, m_cost, lanes, threads,
             NULL, NULL,
-            clear_password, clear_secret, clear_memory);
+            clear_password, clear_secret, clear_memory, print_internals);
 
     if (type == std::string("Argon2d")) {
         printf("Test Argon2d\n");
@@ -208,6 +209,7 @@ void GenerateTestVectors(const std::string &type) {
     bool clear_memory = false;
     bool clear_secret = false;
     bool clear_password = false;
+   const bool print_internals = true; //since we generate test vectors
     uint8_t out[out_length];
     uint8_t pwd[pwd_length];
     uint8_t salt[salt_length];
@@ -236,7 +238,7 @@ void GenerateTestVectors(const std::string &type) {
     Argon2_Context context(out, out_length, pwd, pwd_length, salt, salt_length,
             secret, secret_length, ad, ad_length, t_cost, m_cost, lanes, threads,
             myown_allocator, myown_deallocator,
-            clear_password, clear_secret, clear_memory);
+            clear_password, clear_secret, clear_memory,print_internals);
 
     if (type == std::string("Argon2d")) {
         printf("Test Argon2d\n");
@@ -368,7 +370,7 @@ int main(int argc, char* argv[]) {
     
     
 
-    Run(out,  t_cost, m_cost, lanes, threads, type);
+    Run(out,  t_cost, m_cost, lanes, threads, type,generate_test_vectors);
 
     return 0;
 }
