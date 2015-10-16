@@ -40,6 +40,7 @@ Generate detailed test vectors for type 't', where 't' is one of {Argon2d, Argon
 Check generated test vectors against available test vectors:
 
 `./Scripts/check_test_vectors.sh -s=./Source/C++11/`
+
 `./Scripts/check_test_vectors.sh -s=./Source/C99/`
 
 ##Library usage
