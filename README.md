@@ -18,8 +18,6 @@ The Argon2 source code package includes:
 Build result:
 * Argon2 without debug messages
 `argon2`
-* Argon2 with debug messages
-`argon2-tv`
 * Argon2 shared library
 `libargon2.so`
 * Argon2 built with the shared library
@@ -35,13 +33,14 @@ Benchmark Argon2d, Argon2id, Argon2i, Argon2ds with different level of paralleli
 
 `argon2 -benchmark`
 
-Generate detailed test vectors for 'type', where 'type' is one of {Argon2d, Argon2id, Argon2i, Argon2ds}:
+Generate detailed test vectors for type 't', where 't' is one of {Argon2d, Argon2id, Argon2i, Argon2ds}:
 
-`argon2-tv type -gen-tv`
+`argon2 -gen-tv -type t`
 
 Check generated test vectors against available test vectors:
 
-`./Scripts/check_test_vectors.sh`
+`./Scripts/check_test_vectors.sh -s=./Source/C++11/`
+`./Scripts/check_test_vectors.sh -s=./Source/C99/`
 
 ##Library usage
 
