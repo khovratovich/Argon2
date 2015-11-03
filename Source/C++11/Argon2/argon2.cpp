@@ -15,6 +15,20 @@
 
 #include <map>
 #include <string>
+
+
+/*For memory wiping*/
+#ifdef _MSC_VER
+#include "windows.h"
+#include "winbase.h" //For SecureZeroMemory
+#endif
+#if defined __STDC_LIB_EXT1__
+#define __STDC_WANT_LIB_EXT1__ 1
+#endif
+#define VC_GE_2005( version )		( version >= 1400 )
+
+
+
 #include "argon2.h"
 #include "argon2-core.h"
 
@@ -169,6 +183,35 @@ const char* ErrorMessage(int error_code) {
     return "Unknown error code.";
 }
 
+#if defined(__clang__)
+#if __has_attribute(optnone)
+#define NOT_OPTIMIZED __attribute__((optnone))
+#endif
+#elif defined(__GNUC__)
+#define GCC_VERSION (__GNUC__ * 10000 \
+                    + __GNUC_MINOR__ * 100 \
+                    + __GNUC_PATCHLEVEL__)
+#if GCC_VERSION >= 40400
+#define NOT_OPTIMIZED __attribute__((optimize("O0")))
+#endif
+#endif
+#ifndef NOT_OPTIMIZED
+#define NOT_OPTIMIZED
+#endif
+
+
+void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
+#if defined  (_MSC_VER ) &&  VC_GE_2005( _MSC_VER )
+    SecureZeroMemory(v, n);
+#elif defined memset_s
+    memset_s(v, n);
+#elif defined( __OpenBSD__ )
+    explicit_bzero(memory, size);
+#else
+    static void* (*const volatile memset_sec)(void*, int, size_t) = &memset;
+    memset_sec(v, 0, n);
+#endif
+}
 
 
 /* encoding/decoding helpers */

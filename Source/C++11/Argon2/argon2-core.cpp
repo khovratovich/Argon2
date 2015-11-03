@@ -10,16 +10,6 @@
  */
 
 
-/*For memory wiping*/
-#ifdef _MSC_VER
-#include "windows.h"
-#include "winbase.h" //For SecureZeroMemory
-#endif
-#if defined __STDC_LIB_EXT1__
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
-#define VC_GE_2005( version )		( version >= 1400 )
-
 
 #include <inttypes.h>
 #include <vector>
@@ -34,21 +24,6 @@
 #include "blake2.h"
 #include "blake2-impl.h"
 
-#if defined(__clang__)
-#if __has_attribute(optnone)
-#define NOT_OPTIMIZED __attribute__((optnone))
-#endif
-#elif defined(__GNUC__)
-#define GCC_VERSION (__GNUC__ * 10000 \
-                    + __GNUC_MINOR__ * 100 \
-                    + __GNUC_PATCHLEVEL__)
-#if GCC_VERSION >= 40400
-#define NOT_OPTIMIZED __attribute__((optimize("O0")))
-#endif
-#endif
-#ifndef NOT_OPTIMIZED
-#define NOT_OPTIMIZED
-#endif
 
 block operator^(const block& l, const block& r) {
     block a = l;
@@ -73,23 +48,6 @@ int AllocateMemory(block **memory, uint32_t m_cost) {
     return ARGON2_OK;
 }
 
-/* Function that securely cleans the memory
- * @param mem Pointer to the memory
- * @param s Memory size in bytes
- */
-
-static inline void NOT_OPTIMIZED secure_wipe_memory(void *v, size_t n) {
-#if defined  (_MSC_VER ) &&  VC_GE_2005( _MSC_VER )
-    SecureZeroMemory(v, n);
-#elif defined memset_s
-    memset_s(v, n);
-#elif defined( __OpenBSD__ )
-    explicit_bzero(memory, size);
-#else
-    static void* (*const volatile memset_sec)(void*, int, size_t) = &memset;
-    memset_sec(v, 0, n);
-#endif
-}
 
 void ClearMemory(Argon2_instance_t* instance, bool clear) {
     if (instance->memory != NULL && clear) {

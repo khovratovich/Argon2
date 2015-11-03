@@ -16,11 +16,12 @@ OPT_CFLAGS = -std=c++11 -pthread -O3 -m64 -mavx -Wall
 ARGON2_DIR = ./Argon2
 BLAKE2_DIR = ./Blake2
 TEST_DIR = ./Test
-COMMON_DIR = ./Common
 
 ARGON2_SOURCES = argon2.cpp argon2-core.cpp kat.cpp
 BLAKE2_SOURCES = blake2b.c
-TEST_SOURCES = argon2-test.cpp
+RUN_SOURCES = run.cpp
+BENCH_SOURCES = bench.cpp
+KAT_SOURCES = genkat.cpp
 
 REF_SOURCES = argon2-ref-core.cpp
 OPT_SOURCES = argon2-opt-core.cpp
@@ -37,7 +38,9 @@ SCRIPTS_DIR = ./../../Scripts
 
 ARGON2_BUILD_SOURCES = $(addprefix $(ARGON2_DIR)/,$(ARGON2_SOURCES))
 BLAKE2_BUILD_SOURCES = $(addprefix $(BLAKE2_DIR)/,$(BLAKE2_SOURCES))
-TEST_BUILD_SOURCES = $(addprefix $(TEST_DIR)/,$(TEST_SOURCES))
+RUN_BUILD_SOURCES = $(addprefix $(TEST_DIR)/,$(RUN_SOURCES))
+BENCH_BUILD_SOURCES = $(addprefix $(TEST_DIR)/,$(BENCH_SOURCES))
+KAT_BUILD_SOURCES = $(addprefix $(TEST_DIR)/,$(KAT_SOURCES))
 
 
 #OPT=TRUE
@@ -70,22 +73,40 @@ endif
 
 
 .PHONY: all
-all: cleanall argon2 argon2-lib argon2-lib-test
+all: cleanall argon2 argon2-lib argon2-lib-test argon2-bench argon2-kat
 
 
+.PHONY: argon2-bench
+argon2-bench:
+	$(CC) $(CFLAGS) \
+		$(ARGON2_BUILD_SOURCES) \
+		$(BLAKE2_BUILD_SOURCES) \
+		$(BENCH_BUILD_SOURCES) \
+		-I$(ARGON2_DIR) \
+		-I$(BLAKE2_DIR) \
+		-I$(TEST_DIR) \
+		-o $(BUILD_DIR)/$@
 .PHONY: argon2
 argon2:
 	$(CC) $(CFLAGS) \
 		$(ARGON2_BUILD_SOURCES) \
 		$(BLAKE2_BUILD_SOURCES) \
-		$(TEST_BUILD_SOURCES) \
+		$(RUN_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
 		-I$(BLAKE2_DIR) \
 		-I$(TEST_DIR) \
-		-I$(COMMON_DIR) \
 		-o $(BUILD_DIR)/$@
-
-
+.PHONY: argon2-kat	
+argon2-kat:
+	$(CC) $(CFLAGS) \
+		$(ARGON2_BUILD_SOURCES) \
+		$(BLAKE2_BUILD_SOURCES) \
+		$(KAT_BUILD_SOURCES) \
+		-I$(ARGON2_DIR) \
+		-I$(BLAKE2_DIR) \
+		-I$(TEST_DIR) \
+		-o $(BUILD_DIR)/$@
+	
 .PHONY: argon2-lib
 argon2-lib:
 	$(CC) $(CFLAGS) \
@@ -94,14 +115,13 @@ argon2-lib:
 		$(BLAKE2_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
 		-I$(BLAKE2_DIR) \
-		-I$(COMMON_DIR) \
 		-o $(BUILD_DIR)/lib$(LIB_NAME).$(LIB_EXT)
 
 
 .PHONY: argon2-lib-test
 argon2-lib-test: argon2-lib
 	$(CC) $(CFLAGS) \
-		$(TEST_BUILD_SOURCES) \
+		$(RUN_BUILD_SOURCES) \
 		-I$(ARGON2_DIR) \
 		-I$(TEST_DIR) \
 		-L$(BUILD_DIR_PATH) \
@@ -126,4 +146,3 @@ cleanall: clean
 	rm -f $(ARGON2_DIR)/*~
 	rm -f $(BLAKE2_DIR)/*~
 	rm -f $(TEST_DIR)/*~
-	rm -f $(COMMON_DIR)/*~

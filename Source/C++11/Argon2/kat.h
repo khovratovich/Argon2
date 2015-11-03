@@ -13,7 +13,9 @@
 #ifndef __ARGON2_KAT_H__
 #define __ARGON2_KAT_H__
 
-
+#include <string>
+#include "argon2.h"
+#include "argon2-core.h"
 /*
  * Initial KAT function that prints the inputs to the file
  * @param  blockhash  Array that contains pre-hashing digest
@@ -40,5 +42,10 @@ void PrintTag(const void* out, uint32_t outlen);
  **/
 void InternalKat(const Argon2_instance_t* instance, uint32_t pass);
 
+
+/*Generate test vectors of Argon2 of type @type
+ * 
+ */
+void GenerateTestVectors(const std::string &type);
 
 #endif

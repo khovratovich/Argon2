@@ -20,6 +20,14 @@
 
 extern const char* ARGON2_KAT_FILENAME;
 
+const uint32_t ARGON2_T_COST_DEF= 3;
+const uint32_t ARGON2_LOG_M_COST_DEF= 12; /* 2^12 = 4 MiB */
+const uint32_t ARGON2_LANES_DEF =1;
+const uint32_t ARGON2_THREADS_DEF =1;
+const uint32_t ARGON2_OUT_LEN_DEF =32;
+const uint32_t ARGON2_SALT_LEN_DEF =16;
+
+
 
 /*************************Argon2 input parameter restrictions**************************************************/
 
@@ -119,6 +127,7 @@ enum Argon2_ErrorCodes {
     
        ARGON2_THREADS_TOO_FEW = 28,
     ARGON2_THREADS_TOO_MANY = 29,
+    ARGON2_MISSING_ARGS = 30,
 
     ARGON2_ERROR_CODES_LENGTH /* Do NOT remove; Do NOT add error codes after this error code */
 };
@@ -200,7 +209,7 @@ struct Argon2_Context {
 };
 
 /**
- * Function to hash the inputs in the memory-hard fashion
+ * Function to hash the inputs with Argon2i and default key/ad/parallelism parameters
  * @param  out  Pointer to the memory where the hash digest will be written
  * @param  outlen Digest length in bytes
  * @param  in Pointer to the input (password)
@@ -210,17 +219,23 @@ struct Argon2_Context {
  * @pre    @a out must have at least @a outlen bytes allocated
  * @pre    @a in must be at least @inlen bytes long
  * @pre    @a saltlen must be at least @saltlen bytes long
- * @return Zero if successful, 1 otherwise.
+ * @return Argon2 error code.
  */
-extern  int PHS(void *out, size_t outlen, const void *in, size_t inlen, const void *salt, size_t saltlen,
-        unsigned int t_cost, unsigned int m_cost);
 
+int hash_argon2i(void *out, size_t outlen, const void *in, size_t inlen,
+                 const void *salt, size_t saltlen, unsigned int t_cost,
+                 unsigned int m_cost);
+
+/* same for argon2d */
+int hash_argon2d(void *out, size_t outlen, const void *in, size_t inlen,
+                 const void *salt, size_t saltlen, unsigned int t_cost,
+                 unsigned int m_cost);
 /*
  * **************Argon2d: Version of Argon2 that picks memory blocks depending on the password and salt. Only for side-channel-free environment!!***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
-extern int Argon2d(Argon2_Context* context);
+int Argon2d(Argon2_Context* context);
 
 /*
  *  * **************Argon2i: Version of Argon2 that picks memory blocks independing on the password and salt. Good for side-channels,
@@ -229,21 +244,21 @@ extern int Argon2d(Argon2_Context* context);
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
-extern int Argon2i(Argon2_Context* context);
+int Argon2i(Argon2_Context* context);
 
 /*
  *   * **************Argon2di: Reserved name***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
-extern int Argon2di(Argon2_Context* context);
+int Argon2di(Argon2_Context* context);
 
 /*
  *   * **************Argon2ds: Argon2d hardened against GPU attacks, 20% slower***************
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
-extern int Argon2ds(Argon2_Context* context);
+int Argon2ds(Argon2_Context* context);
 
 
 /*
@@ -252,7 +267,7 @@ extern int Argon2ds(Argon2_Context* context);
  * @param  context  Pointer to current Argon2 context
  * @return  Zero if successful, a non zero error code otherwise
  */
-extern int Argon2id(Argon2_Context* context);
+int Argon2id(Argon2_Context* context);
 
 /*
  * Verify if a given password is correct for Argon2d hashing
@@ -260,7 +275,7 @@ extern int Argon2id(Argon2_Context* context);
  * @param  hash  The password hash to verify. The length of the hash is specified by the context outlen member
  * @return  Zero if successful, a non zero error code otherwise
  */
-extern int VerifyD(Argon2_Context* context, const char *hash);
+int VerifyD(Argon2_Context* context, const char *hash);
 
 /*
  * Get the associated error message for given erro code
@@ -268,4 +283,10 @@ extern int VerifyD(Argon2_Context* context, const char *hash);
  */
 const char* ErrorMessage(int error_code);
 
+
+/* Function that securely cleans the memory
+ * @param mem Pointer to the memory
+ * @param s Memory size in bytes
+ */
+ void  secure_wipe_memory(void *v, size_t n);
 #endif
