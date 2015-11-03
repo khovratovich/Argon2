@@ -14,7 +14,7 @@
 #define __ARGON2_H__
 
 #include <cstddef>
-
+#include <limits.h>
 
 /************************* Constants to enable Known Answer Tests (KAT)  **************************************************/
 
@@ -40,8 +40,17 @@ const uint32_t ARGON2_MIN_OUTLEN = 4;
 const uint32_t ARGON2_MAX_OUTLEN = 0xFFFFFFFF;
 
 /* Minimum and maximum number of memory blocks (each of BLOCK_SIZE bytes) */
-const uint32_t ARGON2_MIN_MEMORY = 2 * ARGON2_SYNC_POINTS; // 2 blocks per slice
-const uint32_t ARGON2_MAX_MEMORY = 0xFFFFFFFF; // 2^32-1 blocks
+/* Minimum and maximum number of memory blocks (each of BLOCK_SIZE bytes) */
+const uint32_t ARGON2_MIN_MEMORY = (2 * ARGON2_SYNC_POINTS); /* 2 blocks per slice */
+
+#define ARGON2_MIN(a, b) ((a) < (b) ? (a) : (b))
+/* Max memory size is half the addressing space, topping at 2^32 blocks (4 TB)
+ */
+const uint32_t ARGON2_MAX_MEMORY_BITS=                                                 
+    ARGON2_MIN(UINT32_C(32), (sizeof(void *) * CHAR_BIT - 10 - 1));
+const uint32_t ARGON2_MAX_MEMORY=                                                     
+    ARGON2_MIN(UINT32_C(0xFFFFFFFF), UINT64_C(1) << ARGON2_MAX_MEMORY_BITS);
+
 
 /* Minimum and maximum number of passes */
 const uint32_t ARGON2_MIN_TIME = 1;
