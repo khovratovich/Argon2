@@ -18,7 +18,7 @@
 #include "kat.h"
 
 
-#include "blake-round-mka.h"
+#include "blamka-round-ref.h"
 #include "blake2-impl.h"
 #include "blake2.h"
 

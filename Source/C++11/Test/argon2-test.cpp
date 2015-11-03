@@ -69,7 +69,7 @@ void Benchmark() {
     memset(salt_array, 1, inlen);
     std::vector<uint32_t> thread_test = {1, 2, 4, 6, 8, 16};
 
-    for (uint32_t m_cost = (uint32_t) 1 << 10; m_cost <= (uint32_t) 1 << 22; m_cost *= 2) {
+    for (uint32_t m_cost = (uint32_t) 1 << 18; m_cost <= (uint32_t) 1 << 22; m_cost *= 2) {
         for (uint32_t thread_n : thread_test) {
 
 #ifdef _MEASURE

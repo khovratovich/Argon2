@@ -28,9 +28,9 @@
 #include "kat.h"
 
 
-#include "blake2-round-mka.h"
-#include "blake2-impl.h"
+
 #include "blake2.h"
+#include "blamka-round-opt.h"
 
 
 
@@ -38,8 +38,8 @@
 const char* ARGON2_KAT_FILENAME = "kat-argon2-opt.log";
 
 
-const __m128i r16 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9);
-const __m128i r24 = _mm_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10);
+//const __m128i r16 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9);
+//const __m128i r24 = _mm_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10);
 
 __m128i t0, t1;
 
@@ -53,20 +53,14 @@ __m128i t0, t1;
  */
 void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, const uint64_t* Sbox) {
     __m128i block_XY[ARGON2_QWORDS_IN_BLOCK];
-    //__m128i state[64];
-
-
-
-    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
-        block_XY[i] = _mm_load_si128((__m128i *) ref_block);
-        ref_block += 16;
-    }
-    for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
-        block_XY[i] = state[i] = _mm_xor_si128(state[i], block_XY[i]);
+    
+     for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {//Initial XOR
+        block_XY[i] = state[i] = _mm_xor_si128(
+            state[i], _mm_loadu_si128((__m128i const *)(&ref_block[16 * i])));
     }
 
     uint64_t x = 0;
-    if (Sbox != NULL) {
+    if (Sbox != NULL) { //S-boxes in Argon2ds
         x = _mm_extract_epi64(block_XY[0], 0) ^ _mm_extract_epi64(block_XY[ARGON2_QWORDS_IN_BLOCK - 1], 1);
         for (int i = 0; i < 6 * 16; ++i) {
             uint32_t x1 = x >> 32;
@@ -79,54 +73,18 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
         }
     }
 
-    BLAKE2_ROUND(state[0], state[1], state[2], state[3],
-            state[4], state[5], state[6], state[7]);
+      for (uint32_t i = 0; i < 8; ++i) {
+        BLAKE2_ROUND(state[8 * i + 0], state[8 * i + 1], state[8 * i + 2],
+                     state[8 * i + 3], state[8 * i + 4], state[8 * i + 5],
+                     state[8 * i + 6], state[8 * i + 7]);
+    }
 
-    BLAKE2_ROUND(state[8], state[9], state[10], state[11],
-            state[12], state[13], state[14], state[15]);
+    for (uint32_t i = 0; i < 8; ++i) {
+        BLAKE2_ROUND(state[8 * 0 + i], state[8 * 1 + i], state[8 * 2 + i],
+                     state[8 * 3 + i], state[8 * 4 + i], state[8 * 5 + i],
+                     state[8 * 6 + i], state[8 * 7 + i]);
+    }
 
-    BLAKE2_ROUND(state[16], state[17], state[18], state[19],
-            state[20], state[21], state[22], state[23]);
-
-    BLAKE2_ROUND(state[24], state[25], state[26], state[27],
-            state[28], state[29], state[30], state[31]);
-
-    BLAKE2_ROUND(state[32], state[33], state[34], state[35],
-            state[36], state[37], state[38], state[39]);
-
-    BLAKE2_ROUND(state[40], state[41], state[42], state[43],
-            state[44], state[45], state[46], state[47]);
-
-    BLAKE2_ROUND(state[48], state[49], state[50], state[51],
-            state[52], state[53], state[54], state[55]);
-
-    BLAKE2_ROUND(state[56], state[57], state[58], state[59],
-            state[60], state[61], state[62], state[63]);
-
-
-    BLAKE2_ROUND(state[0], state[8], state[16], state[24],
-            state[32], state[40], state[48], state[56]);
-
-    BLAKE2_ROUND(state[1], state[9], state[17], state[25],
-            state[33], state[41], state[49], state[57]);
-
-    BLAKE2_ROUND(state[2], state[10], state[18], state[26],
-            state[34], state[42], state[50], state[58])
-
-            BLAKE2_ROUND(state[3], state[11], state[19], state[27],
-            state[35], state[43], state[51], state[59]);
-
-    BLAKE2_ROUND(state[4], state[12], state[20], state[28],
-            state[36], state[44], state[52], state[60]);
-
-    BLAKE2_ROUND(state[5], state[13], state[21], state[29],
-            state[37], state[45], state[53], state[61]);
-
-    BLAKE2_ROUND(state[6], state[14], state[22], state[30],
-            state[38], state[46], state[54], state[62]);
-
-    BLAKE2_ROUND(state[7], state[15], state[23], state[31],
-            state[39], state[47], state[55], state[63]);
 
     for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
         // Feedback
@@ -135,8 +93,7 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
     state[0] = _mm_add_epi64(state[0], _mm_set_epi64x(0, x));
     state[ARGON2_QWORDS_IN_BLOCK - 1] = _mm_add_epi64(state[ARGON2_QWORDS_IN_BLOCK - 1], _mm_set_epi64x(x, 0));
     for (uint32_t i = 0; i < ARGON2_QWORDS_IN_BLOCK; i++) {
-        _mm_store_si128((__m128i *) next_block, state[i]);
-        next_block += 16;
+                _mm_storeu_si128((__m128i *)(&next_block[16 * i]), state[i]);
     }
 }
 

@@ -19,7 +19,7 @@ TEST_DIR = ./Test
 COMMON_DIR = ./Common
 
 ARGON2_SOURCES = argon2.cpp argon2-core.cpp kat.cpp
-BLAKE2_SOURCES = blake2b-ref.cpp
+BLAKE2_SOURCES = blake2b.c
 TEST_SOURCES = argon2-test.cpp
 
 REF_SOURCES = argon2-ref-core.cpp

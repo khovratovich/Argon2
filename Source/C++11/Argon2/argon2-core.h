@@ -100,7 +100,7 @@ block operator^(const block& l, const block& r);
  * Used to evaluate the number and location of blocks to construct in each thread
  */
 struct Argon2_instance_t {
-    block* memory; //Memory pointer
+    block*  memory; //Memory pointer
     const uint32_t passes; //Number of passes
     const uint32_t memory_blocks; //Number of blocks in memory
     const uint32_t lanes; //Number of lanes
