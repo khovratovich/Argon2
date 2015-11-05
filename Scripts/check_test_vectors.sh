@@ -85,7 +85,7 @@ do
 		rm -f $kat_file
 
 		run_log=$OUTPUT_PATH"run_"$type"_"$implementation".log"
-		./../../Build/argon2 -gen-tv -type $type > $run_log
+		./../../Build/argon2-kat $type > $run_log
 		if [ 0 -ne $? ] ; then
 			echo -e "\t\t -> Wrong! Run error! See $run_log for details!"
 			continue
@@ -94,7 +94,7 @@ do
 		fi
 
 
-		kat_file_copy=$OUTPUT_PATH/${kat_file/"argon2"/$type}
+		kat_file_copy=$OUTPUT_PATH${kat_file/"argon2"/$type}
 		cp $kat_file $kat_file_copy
 		rm -f $kat_file
 
