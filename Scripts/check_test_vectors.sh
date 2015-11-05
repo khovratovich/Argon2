@@ -85,7 +85,12 @@ do
 		rm -f $kat_file
 
 		run_log=$OUTPUT_PATH"run_"$type"_"$implementation".log"
-		./../../Build/argon2-kat $type > $run_log
+		if [[ $SOURCE_DIR == *"C++11"* ]] ; then
+			./../../Build/argon2-kat $type > $run_log
+		fi
+		if [[ $SOURCE_DIR == *"C99"* ]] ; then
+			./../../Build/argon2 -gen-tv -type $type > $run_log
+		fi
 		if [ 0 -ne $? ] ; then
 			echo -e "\t\t -> Wrong! Run error! See $run_log for details!"
 			continue
