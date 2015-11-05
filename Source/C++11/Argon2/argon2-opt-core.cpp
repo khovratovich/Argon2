@@ -61,7 +61,7 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
 
     uint64_t x = 0;
     if (Sbox != NULL) { //S-boxes in Argon2ds
-        x = _mm_extract_epi64(block_XY[0], 0) ^ _mm_extract_epi64(block_XY[ARGON2_QWORDS_IN_BLOCK - 1], 1);
+		x = *(uint64_t*)block_XY ^ ((uint64_t*)block_XY)[2 * ARGON2_QWORDS_IN_BLOCK - 1];
         for (int i = 0; i < 6 * 16; ++i) {
             uint32_t x1 = x >> 32;
             uint32_t x2 = x & 0xFFFFFFFF;
