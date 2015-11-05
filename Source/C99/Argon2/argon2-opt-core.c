@@ -16,7 +16,7 @@
 
 #if !defined(_MSC_VER)
 #include <x86intrin.h>
-#else 
+#else
 #include <emmintrin.h>
 #include <smmintrin.h>
 #include <intrin.h>
@@ -59,7 +59,7 @@ void FillBlock(__m128i* state, const uint8_t *ref_block, uint8_t *next_block, co
 
     uint64_t x = 0;
     if (Sbox != NULL) {
-		x = *(uint64_t*)block_XY ^ ((uint64_t*)block_XY)[2 * ARGON2_QWORDS_IN_BLOCK - 1];
+	x = *(uint64_t*)block_XY ^ ((uint64_t*)block_XY)[2 * ARGON2_QWORDS_IN_BLOCK - 1];
         for (int i = 0; i < 6 * 16; ++i) {
             uint32_t x1 = x >> 32;
             uint32_t x2 = x & 0xFFFFFFFF;
