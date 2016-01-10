@@ -2,16 +2,17 @@
 
 
 ## Warning
-Argon2 is the basis for the eventual winner of Password Hashing Competition. 
+Argon2 is the basis for the eventual winner of Password Hashing Competition.
 The final winner may be different from the current version (1.2.1).
 
 ## About
-The Argon2 source code package includes:
-* Reference C/C++ implementation of password hashing scheme Argon2
+The Argon2 source code package in `Source/` includes:
+
+* Reference C99 & C++11 implementations of the password hashing scheme Argon2
 
 	`make`
-        
-* Optimized C/C++ implementation of password hashing scheme Argon2
+
+* Optimized C99 & C++11 implementations of the password hashing scheme Argon2
 
 	`make OPT=TRUE`
 
