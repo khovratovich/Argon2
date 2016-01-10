@@ -72,6 +72,12 @@ Check generated test vectors against available test vectors:
 
 3. Call 'mode'(context) such as Argon2d(context) and read the output buffer.
 
+## Language Bindings
+Bindings to the Argon2 library are available in a number of languages
+* [Rust](https://github.com/quininer/argon2-rs)
+* [Haskell](https://github.com/ocharles/argon2)
+* [Python](https://github.com/flamewow/argon2_py)
+* [GO](https://github.com/xebia/argon2-go)
 
 ## Copyright
 Argon2 source code package is distributed unde the Creative Commons CC0 1.0 License.
