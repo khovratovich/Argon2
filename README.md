@@ -73,7 +73,7 @@ Check generated test vectors against available test vectors:
 
 
 ## Copyright
-Argon2 source code package is distributed unde the Creative Commons CC0 1.0 License.
+Argon2 source code package is distributed under the Creative Commons CC0 1.0 License.
 
 
 ## Third Party Code
