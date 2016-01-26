@@ -2,16 +2,17 @@
 
 
 ## Warning
-Argon2 is the basis for the eventual winner of Password Hashing Competition. 
+Argon2 is the basis for the eventual winner of Password Hashing Competition.
 The final winner may be different from the current version (1.2.1).
 
 ## About
-The Argon2 source code package includes:
-* Reference C/C++ implementation of password hashing scheme Argon2
+The Argon2 source code package in `Source/` includes:
+
+* Reference C99 & C++11 implementations of the password hashing scheme Argon2
 
 	`make`
-        
-* Optimized C/C++ implementation of password hashing scheme Argon2
+
+* Optimized C99 & C++11 implementations of the password hashing scheme Argon2
 
 	`make OPT=TRUE`
 
@@ -71,6 +72,12 @@ Check generated test vectors against available test vectors:
 
 3. Call 'mode'(context) such as Argon2d(context) and read the output buffer.
 
+## Language Bindings
+Bindings to the Argon2 library are available in a number of languages
+* [Rust](https://github.com/quininer/argon2-rs)
+* [Haskell](https://github.com/ocharles/argon2)
+* [Python](https://github.com/flamewow/argon2_py)
+* [GO](https://github.com/xebia/argon2-go)
 
 ## Copyright
 Argon2 source code package is distributed under the Creative Commons CC0 1.0 License.
